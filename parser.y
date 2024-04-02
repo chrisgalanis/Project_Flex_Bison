@@ -16,13 +16,22 @@ void yyerror(const char *s);
 
 //Variable Types
 %token INT
+%token EMTPY
 
 %start program
 
 %%
-program: %empty | class_identifier
 
-class_identifier: PUBLIC CLASS CLASS_NAME CURLY_BRACKET_LEFT CURLY_BRACKET_RIGHT {printf("Class is identified");}
+program: %empty | class_identifier ;
+// Class Identifier of Only One Class
+
+class_identifier: PUBLIC CLASS CLASS_NAME CURLY_BRACKET_LEFT class_body CURLY_BRACKET_RIGHT {printf("\nClass is identified\n");} ;
+
+class_body: %empty ;
+
+//variables: 
+//if_statement: 
+//for_statement: 
 
 %%
 
