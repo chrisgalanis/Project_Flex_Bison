@@ -2,7 +2,6 @@
 #include<stdio.h>
 #include "parser.tab.h"
 
-
 %}
 
 INT "int"
@@ -29,13 +28,35 @@ PUBLIC "public"
 PRIVATE "private"
 
 %%
+"{" {printf("\n { \n"); return CURLY_BRACKET_LEFT;}
+"}" {printf("\n } \n");return CURLY_BRACKET_RIGHT;}
+"(" {printf("\n ( \n");return BRACKET_LEFT;}
+")" {printf("\n ) \n");return BRACKET_RIGHT;}
+"=" {return EQUAL_SIGN;}
+";" {printf("\n ; \n");return SEMICOLON;}
+"'" {return SINGLE_MARK;}
+
+{PUBLIC} {printf("\nPUBLIC\n"); return PUBLIC;}
+{CLASS} {printf("\nCLASS\n");return CLASS;}
+[A-Z][a-z]* {printf("\nCLASS NAME\n"); return CLASS_NAME;}
+{NEW} {return NEW;}
+
+{FOR} {printf("\n FOR \n"); return FOR;}
+{WHILE} {return WHILE;}
+"=="|"!="|">="|"<="|">"|"<" { return CONDITION_SYMBOL; }
+"&&"|"||" {return BOOL_SYMBOL;}
+"++"|"--" {return INCREAMENT_DECREAMENT;}
+"+="|"-="|"*="|"/=" {return LOOP_STEP;}
+
+
 {INT} {return INT;}
-{PUBLIC} {return PUBLIC;}
-{CLASS} {return CLASS;}
-"{" {return CURLY_BRACKET_LEFT;}
-"}" {return CURLY_BRACKET_RIGHT;}
-[0-9]+ {printf("%s\n", yytext);}
-[A-Z]+[a-z]* {printf("%s\n", yytext); return CLASS_NAME;}
+{CHAR} {return CHAR;}
+{DOUBLE} {return DOUBLE;}
+{BOOLEAN} {return BOOLEAN;}
+
+[A-Za-z][A-Za-z0-9_]* {printf("\nVAR NAME\n");return VAR_NAME;}
+[+|-]?[0-9]+ {return INT_VALUE;}
+['][ -~]?['] {return CHAR_VALUE;}
 [ \t\n] {}
 %%
 
