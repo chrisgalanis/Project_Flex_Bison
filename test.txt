@@ -1,8 +1,0 @@
-public class  Ab {
-    {
-        for(int i = 3; i != 3 && b < 3; i++)
-        {
-
-        }
-    }
-}
