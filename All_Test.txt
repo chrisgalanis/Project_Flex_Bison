@@ -40,7 +40,7 @@ public class  Ab {
 
 
 public class  Ab {
-    {
+    (int a , int  para){
         for(int i = 3; i != 3 && b < 3; i++)
         {
 
@@ -50,3 +50,47 @@ public class  Ab {
 
 
 ----------------------------------
+
+
+public class  Ab {
+    {
+        for(int i = 3; i != 3 && b < 3; i++)
+        {
+            for(int i = 3; i != 3 && b < 3; i++)
+            {
+
+            }
+        }
+    }
+}
+------------------------------------
+
+
+public class  Ab {
+    {
+        for(int i = 3; i != 3 && b < 3; i++)
+        {
+            
+        }
+
+        switch (a)
+        {
+            case 1:
+                case 2:
+            case "a":
+        }
+    }
+}
+------------------------------------
+
+public class  Ab {
+    private int agguri( int x ){
+   
+        for(int i = 3; i != 3 && b < 3; i++)
+        {
+
+        }
+        return 2;
+    }
+}
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx

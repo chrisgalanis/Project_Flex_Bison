@@ -35,20 +35,31 @@ PRIVATE "private"
 "=" {return EQUAL_SIGN;}
 ";" {printf("\n ; \n");return SEMICOLON;}
 "'" {return SINGLE_MARK;}
+":" {return COLON;}
+"," {return COMMA;}
 
 {PUBLIC} {printf("\nPUBLIC\n"); return PUBLIC;}
+{PRIVATE} {printf("\nPRIVATE\n"); return PRIVATE;}
 {CLASS} {printf("\nCLASS\n");return CLASS;}
 [A-Z][a-z]* {printf("\nCLASS NAME\n"); return CLASS_NAME;}
 {NEW} {return NEW;}
 
 {FOR} {printf("\n FOR \n"); return FOR;}
 {WHILE} {return WHILE;}
+
+{SWITCH}  {return SWITCH;}
+{CASE}    {return CASE; }
+{DEFAULT} {return DEFAULT;}
+
+{BREAK}  {return BREAK;}
+{RETURN} {return RETURN;}
+
 "=="|"!="|">="|"<="|">"|"<" { return CONDITION_SYMBOL; }
 "&&"|"||" {return BOOL_SYMBOL;}
 "++"|"--" {return INCREAMENT_DECREAMENT;}
 "+="|"-="|"*="|"/=" {return LOOP_STEP;}
 
-
+{VOID} {return VOID;}
 {INT} {return INT;}
 {CHAR} {return CHAR;}
 {DOUBLE} {return DOUBLE;}
