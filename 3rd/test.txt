@@ -1,7 +1,15 @@
 public class  Ab {
-    String x = "Absg";
-    boolean x = false;
-    boolean y = true;
+    int x = 5;
+
+    private void agguri(  ){
+       
+        for(int i = 3; i != 3 && b < 3; i+=2)
+        {
+            int a = 4;
+            Ab b = new Ab();
+        }
+       
+    }
 
 
 }
