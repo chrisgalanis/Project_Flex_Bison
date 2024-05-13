@@ -1,0 +1,8 @@
+public class  Ab {
+    String x = "Absg";
+    boolean x = false;
+    boolean y = true;
+
+
+}
+
