@@ -94,3 +94,26 @@ public class  Ab {
     }
 }
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+public class  Ab {
+    private void agguri( int x , boolean y ){
+   
+        for(int i = 3; i != 3 && b < 3; i+=2)
+        {
+
+        }
+       
+    }
+
+    public void agguri( int x , boolean y ){
+   
+        for(int i = 3; i != 3 && b < 3; i+=2)
+        {
+
+        }
+       
+    }
+
+}
+
+------------------------------------

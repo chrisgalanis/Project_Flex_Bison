@@ -37,14 +37,11 @@ PRIVATE "private"
 "'" {return SINGLE_MARK;}
 ":" {return COLON;}
 "," {return COMMA;}
+"." {return DOT;}
 
-{PUBLIC} {printf("\nPUBLIC\n"); return PUBLIC;}
-{PRIVATE} {printf("\nPRIVATE\n"); return PRIVATE;}
-{CLASS} {printf("\nCLASS\n");return CLASS;}
-[A-Z][a-z]* {printf("\nCLASS NAME\n"); return CLASS_NAME;}
-{NEW} {return NEW;}
 
 {FOR} {printf("\n FOR \n"); return FOR;}
+{DO} {printf("\n DO \n"); return DO;}
 {WHILE} {return WHILE;}
 
 {SWITCH}  {return SWITCH;}
@@ -65,9 +62,16 @@ PRIVATE "private"
 {DOUBLE} {return DOUBLE;}
 {BOOLEAN} {return BOOLEAN;}
 
-[A-Za-z][A-Za-z0-9_]* {printf("\nVAR NAME\n");return VAR_NAME;}
+{PUBLIC} {printf("\nPUBLIC\n"); return PUBLIC;}
+{PRIVATE} {printf("\nPRIVATE\n"); return PRIVATE;}
+{CLASS} {printf("\nCLASS\n");return CLASS;}
+{NEW} {return NEW;}
+[A-Z][a-z]* {printf("\nCLASS NAME\n"); return CLASS_NAME;}
+
 [+|-]?[0-9]+ {return INT_VALUE;}
 ['][ -~]?['] {return CHAR_VALUE;}
+{TRUE}|{FALSE} {return BOOLEAN_VALUE;}
+[A-Za-z][A-Za-z0-9_]* {printf("\nVAR NAME\n");return VAR_NAME;}
 [ \t\n] {}
 %%
 
