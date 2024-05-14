@@ -20,12 +20,13 @@
     variable * stack[100];
     int top = 0;
 
-    variable * create_variable(int visibility, char *type, char *name,  char *value )
+    variable * create_variable(int visibility, char *type, char *name)
     {
+        printf("Creating variable:: ");
         variable *v = (variable *)malloc(sizeof(variable));
         v->name = name;
         v->type = type;
-        v->value = value;
+        // v->value = value;
         v->visibility = visibility;
         return v;
     }
@@ -65,6 +66,25 @@
             }
         }
         return -1;
+    }
+
+
+    void variable_initiliazation(int visibility , char *type, char *name)
+    {
+        if (find_variable(name) > 0)
+        {   
+            char *msg;
+            yyerror("Variable has been initialized");
+            printf("!!! Variable: %s has been initialized with type: %s !!!\n", name, type);
+            exit(0);
+        }
+        else
+        {
+            variable* var = create_variable(visibility, type, name); 
+            print_variable(var);
+            push(var);
+            print_stack();
+        }
     }
 
 %}
@@ -119,6 +139,7 @@
 
 //Variable Types
 %type <sval> variable_assignment
+%type <sval> variable_type
 %token <sval> VAR_NAME
 %token <sval> VOID
 %token <sval> INT
@@ -158,49 +179,17 @@ variable_initialization:  visibility variable_type VAR_NAME  ;
 
 
 visibility:  %empty { $$ = 0; } | PUBLIC { $$ = 1; } | PRIVATE { $$ = 0; } ;
-variable_assignment: visibility INT VAR_NAME EQUAL_SIGN INT_VALUE { 
-                                                                    char num_to_str[12];
-                                                                    sprintf(num_to_str, "%d", $5);
-                                                                    variable* var = create_variable($1, "int" , $3 , num_to_str); 
-                                                                    print_variable(var);
-                                                                    push(var);
-                                                                    print_stack();
-                                                                  } |
-                     visibility DOUBLE VAR_NAME EQUAL_SIGN DOUBLE_VALUE { 
-                                                                    char num_to_str[12];
-                                                                    sprintf(num_to_str, "%f", $5);
-                                                                    variable* var = create_variable($1, "double" , $3 , num_to_str); 
-                                                                    print_variable(var);
-                                                                    push(var);
-                                                                    print_stack();
-                                                                  } |
-                     visibility CHAR VAR_NAME EQUAL_SIGN CHAR_VALUE { 
-                                                                    variable* var = create_variable($1, "char" , $3 , &$5); 
-                                                                    print_variable(var);
-                                                                    push(var);
-                                                                    print_stack();
-                                                                  } |
-                     visibility BOOLEAN VAR_NAME EQUAL_SIGN BOOLEAN_VALUE { 
-                                                            
-                                                                    variable* var = create_variable($1, "boolean" , $3 , $5); 
-                                                                    print_variable(var);
-                                                                    push(var);
-                                                                    print_stack();
-                                                                  } |
-                     visibility STRING VAR_NAME EQUAL_SIGN STRING_VALUE { 
-                                                                    variable* var = create_variable($1, "STring" , $3 , $5); 
-                                                                    print_variable(var);
-                                                                    push(var);
-                                                                    print_stack();
-                                                                  };
+variable_assignment: visibility variable_type VAR_NAME EQUAL_SIGN variable_value { 
+                                                                                    variable_initiliazation($1, $2, $3);
+                                                                                 } 
 
 
 variable_value:  INT_VALUE | CHAR_VALUE | DOUBLE_VALUE | BOOLEAN_VALUE | STRING_VALUE ;
-variable_type: INT   
-              |DOUBLE
-              |CHAR
-              |BOOLEAN
-              |STRING ;
+variable_type: INT { $$ = "int"; }  
+              |DOUBLE { $$ = "double";}
+              |CHAR { $$ = "char";}
+              |BOOLEAN {$$ = "boolean";}
+              |STRING {$$ = "String";};
 //Class Instance
 class_instance: CLASS_NAME VAR_NAME EQUAL_SIGN NEW CLASS_NAME BRACKET_LEFT BRACKET_RIGHT ;
 member_access: VAR_NAME DOT VAR_NAME ; //End Class Instance
@@ -211,7 +200,9 @@ functions: visibility VOID VAR_NAME BRACKET_LEFT arguments BRACKET_RIGHT CURLY_B
 
 
 arguments : %empty | parameters
-parameters: variable_type VAR_NAME arguments_end
+parameters: variable_type VAR_NAME arguments_end {
+                                                    variable_initiliazation(0, $1, $2);
+                                                 }; 
 arguments_end : %empty | COMMA parameters 
 
 inside_void_function: inside_brackets | inside_brackets RETURN SEMICOLON ;

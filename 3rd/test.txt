@@ -1,9 +1,9 @@
 public class  Ab {
     int x = 5;
 
-    private void agguri(  ){
+    private void agguri( int a ){
        
-        for(int i = 3; i != 3 && b < 3; i+=2)
+        for(int a = 3; i != 3 && a < 3; i+=2)
         {
             int a = 4;
             Ab b = new Ab();
