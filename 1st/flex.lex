@@ -39,10 +39,16 @@ PRIVATE "private"
 "," {return COMMA;}
 "." {return DOT;}
 
+"+" {return PLUS;}
+"-" {return MINUS;}
+"*" {return MULTIPLY;}
+"/" {return DIVIDE;}
+
 
 {FOR} {printf("\n FOR \n"); return FOR;}
 {DO} {printf("\n DO \n"); return DO;}
 {WHILE} {return WHILE;}
+{IF} {return IF;}
 
 {SWITCH}  {return SWITCH;}
 {CASE}    {return CASE; }
@@ -68,10 +74,15 @@ PRIVATE "private"
 {NEW} {return NEW;}
 [A-Z][a-z]* {printf("\nCLASS NAME\n"); return CLASS_NAME;}
 
+
 [+|-]?[0-9]+ {return INT_VALUE;}
+[+|-]?[0-9]+[.][0-9]+[d] {return DOUBLE_VALUE;}
 ['][ -~]?['] {return CHAR_VALUE;}
 {TRUE}|{FALSE} {return BOOLEAN_VALUE;}
-[A-Za-z][A-Za-z0-9_]* {printf("\nVAR NAME\n");return VAR_NAME;}
+[A-Za-z_][A-Za-z0-9_]* {printf("\nVAR NAME\n");return VAR_NAME;}
+
+"//"([ -~	]+) {printf("\nCOMMENT\n");}
+"/*"([ -~   \n]+)"*/" {printf("\nCOMMENTS\n");}
 [ \t\n] {}
 %%
 
