@@ -1,32 +1,81 @@
 %{
 #include<stdio.h>
+#include "parser.tab.h"
+
 %}
 
 INT "int"
+CHAR "char"
+DOUBLE "double"
+BOOLEAN "boolean"
+STRING "String"
 CLASS "class"
-VISSTATUS "public"
-WHILELOOP "while"
+NEW "new"
+RETURN "return"
+VOID "void"
+IF "if"
+ELSE "else"
+WHILE "while"
+DO "do"
+FOR "for"
+SWITCH "switch"
+CASE "case"
+DEFAULT "default"
+BREAK "break"
+TRUE "true"
+FALSE "false"
+PUBLIC "public"
+PRIVATE "private"
+
 %%
-{VISSTATUS} {printf("VISSTATUS: %s\n", yytext);}
-{CLASS} {printf("CLASS : %s\n", yytext);}
-[a-z]+ {printf("NAME: %s\n", yytext);}
-"{" {printf("CURLY BRAKET LEFT");}
-"}" {printf("CURLY BRAKET RIGHT");}
+"{" {printf("\n { \n"); return CURLY_BRACKET_LEFT;}
+"}" {printf("\n } \n");return CURLY_BRACKET_RIGHT;}
+"(" {printf("\n ( \n");return BRACKET_LEFT;}
+")" {printf("\n ) \n");return BRACKET_RIGHT;}
+"=" {return EQUAL_SIGN;}
+";" {printf("\n ; \n");return SEMICOLON;}
+"'" {return SINGLE_MARK;}
+":" {return COLON;}
+"," {return COMMA;}
+"." {return DOT;}
 
-{WHILELOOP} {printf("WHILELOOP: %s\n", yytext);}
-"(" {printf("BRAKET LEFT");}
-[A-Za-z0-9]+\?\!\<\>\=[A-Za-z0-9]+ {printf("CONDITION: %s\n", yytext);}
-")" {printf("BRAKET RIGHT");}
 
+{FOR} {printf("\n FOR \n"); return FOR;}
+{DO} {printf("\n DO \n"); return DO;}
+{WHILE} {return WHILE;}
 
+{SWITCH}  {return SWITCH;}
+{CASE}    {return CASE; }
+{DEFAULT} {return DEFAULT;}
 
-{INT} {printf("DataType : %s\n",yytext);}
-[0-9]+ {printf("%s\n", yytext);}
-[a-z]+ {printf("%s\n", yytext);}
+{BREAK}  {return BREAK;}
+{RETURN} {return RETURN;}
+
+"=="|"!="|">="|"<="|">"|"<" { return CONDITION_SYMBOL; }
+"&&"|"||" {return BOOL_SYMBOL;}
+"++"|"--" {return INCREAMENT_DECREAMENT;}
+"+="|"-="|"*="|"/=" {return LOOP_STEP;}
+
+"+" {return PLUS;}
+"-" {return MINUS;}
+"*" {return MULTIPLY;}
+"/" {return DIVIDE;}
+
+{VOID} {return VOID;}
+{INT} {return INT;}
+{CHAR} {return CHAR;}
+{DOUBLE} {return DOUBLE;}
+{BOOLEAN} {return BOOLEAN;}
+
+{PUBLIC} {printf("\nPUBLIC\n"); return PUBLIC;}
+{PRIVATE} {printf("\nPRIVATE\n"); return PRIVATE;}
+{CLASS} {printf("\nCLASS\n");return CLASS;}
+{NEW} {return NEW;}
+[A-Z][a-z]* {printf("\nCLASS NAME\n"); return CLASS_NAME;}
+
+[+|-]?[0-9]+ {return INT_VALUE;}
+['][ -~]?['] {return CHAR_VALUE;}
+{TRUE}|{FALSE} {return BOOLEAN_VALUE;}
+[A-Za-z][A-Za-z0-9_]* {printf("\nVAR NAME\n");return VAR_NAME;}
 [ \t\n] {}
 %%
-
-int main(void)
-{
-    yylex();
-}
