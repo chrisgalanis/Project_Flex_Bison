@@ -48,7 +48,8 @@ PRIVATE "private"
 {FOR} {printf("\n FOR \n"); return FOR;}
 {DO} {printf("\n DO \n"); return DO;}
 {WHILE} {return WHILE;}
-{IF} {return IF;}
+{IF} { return IF;}
+{ELSE} {return ELSE;}
 
 {SWITCH}  {return SWITCH;}
 {CASE}    {return CASE; }

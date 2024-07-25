@@ -1,27 +1,24 @@
-public class  Ab {
-    int x = 5;
+public class  Ab 
+{
+ //   int xs;
+ //   xs = (a - (5 / (4)));
 
-    private void agguri( int x , boolean y ){
-        boolean a;
-        for(int i = 3; i != 3 && b < 3; i+=2)
-        {
-            int a = 4;
-            Ab b = new Ab();
-        }
-       
-    }
-  
-    public void agguri( int x , boolean y ){
-   
-        for(int i = 3; i != 3 && b < 3; i+=2)
+    public void sandwitch()
+    {
+        if ( a  )
         {
 
         }
-        do{
+        else if ( b )
+        {
 
-        }while(true);
-       
+        }
+        else 
+        {
+
+        }
     }
 
 }
+
 

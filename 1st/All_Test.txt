@@ -117,3 +117,105 @@ public class  Ab {
 }
 
 ------------------------------------
+
+public class  Ab {
+    int x = 5;
+
+    private void agguri( int x , boolean y ){
+        boolean a;
+        
+        for(int i = 3; i != 3 && b < 3; i+=2)
+        {
+            int a = 4;
+            Ab b = new Ab();
+        }
+       
+    }
+
+    public void agguri( int x , boolean y ){
+   
+        for(int i = 3; i != 3 && b < 3; i+=2)
+        {
+
+        }
+        do{
+
+        }while(a < 5 && a > 5 );
+
+        switch (ok)
+        {
+            case 1:
+                break;
+            case 2:
+                break;
+            default:
+                
+        }
+       
+    }
+
+}
+-----------------------------------------------------
+
+public class  Ab {
+    int Xs= 5;
+
+    private void agguri( int x , boolean y ){
+        boolean a;
+        
+        for(int i = 3; i != 3 && b < 3; i+=2)
+        {
+            int a = 4;
+            Ab b = new Ab();
+        }
+       
+    }
+
+    public void agguri( int x , boolean y ){
+        
+
+        φα
+        if (b < 1)
+        {
+            
+        }
+        else if (a > 10)
+        {
+
+        }
+        else if ( b < 1)
+        {
+
+        }
+        else
+        {
+            
+        }
+       
+
+
+        for(int i = 3; i != 3 && b < 3; i+=2)
+        {
+
+        }
+        do{
+
+        }while(a < 5 && a > 5 );
+
+        switch (ok)
+        {
+            case 1:
+                break;
+            case 2:
+                break;
+            default:
+                
+        } 
+
+
+
+    }
+
+}
+
+

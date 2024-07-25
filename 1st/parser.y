@@ -82,7 +82,7 @@ class_body: %empty |  functions class_body
 	               |  class_members class_body
                    |  class_identifier class_body;
 	        
-class_members: variable_initialization SEMICOLON | variable_assignment SEMICOLON;
+class_members: variable_initialization SEMICOLON | variable_assignment SEMICOLON  | member_access SEMICOLON;
 
 variable_type: INT   
               |DOUBLE
@@ -92,6 +92,20 @@ variable_type: INT
 //Class Instance
 class_instance: CLASS_NAME VAR_NAME EQUAL_SIGN NEW CLASS_NAME BRACKET_LEFT BRACKET_RIGHT ;
 member_access: VAR_NAME DOT VAR_NAME ; //End Class Instance
+
+// Note Fix Visibility
+// !! Assignement Επιπλέον, η σύνθετη παράσταση μπορεί να είναι οποιαδήποτε αριθμητική παράσταση που περιλαμβάνει τις πράξεις +, -, *, /.  
+//expressions
+variable_assignment:  VAR_NAME EQUAL_SIGN expression;
+expression: expression PLUS term |expression MINUS term |  BRACKET_LEFT expression  BRACKET_RIGHT | term;
+term: term MULTIPLY id | term DIVIDE id | BRACKET_LEFT term BRACKET_RIGHT | id;
+id: variable_value | VAR_NAME |  BRACKET_LEFT id  BRACKET_RIGHT;
+
+/*variable_action: other | other expression_operation  other ;
+other: number | BRACKET_LEFT number expression_operation other BRACKET_RIGHT | BRACKET_LEFT number BRACKET_RIGHT; 
+expression_operation: PLUS | MINUS | DIVIDE | MULTIPLY;
+number: INT_VALUE | DOUBLE_VALUE | CHAR_VALUE | VAR_NAME;
+*/
 
 // Functions
 functions: function_visibility VOID VAR_NAME BRACKET_LEFT arguments BRACKET_RIGHT CURLY_BRACKET_LEFT inside_void_function CURLY_BRACKET_RIGHT 
@@ -106,7 +120,10 @@ inside_void_function: inside_brackets | inside_brackets RETURN SEMICOLON ;
 inside_function: inside_brackets  RETURN VAR_NAME SEMICOLON  | inside_brackets RETURN variable_value SEMICOLON ;
 // End Functions
 
-inside_brackets: %empty | loops_n_condition inside_brackets ;
+inside_brackets: %empty | loops_n_condition inside_brackets | variable_assignment SEMICOLON ;
+
+
+
 loops_n_condition: for_statement | switch | do_while | if | variable_initialization  SEMICOLON | variable_assignment SEMICOLON | class_instance SEMICOLON  |member_access SEMICOLON ; // + Δήλωση Μεταβλητών
 
 // For Loop
@@ -133,7 +150,7 @@ operand: VAR_NAME | INT_VALUE | DOUBLE_VALUE | CHAR_VALUE | BOOLEAN_VALUE ;
 
 // For the 2nd Version we need to recognise: int var = INT_Number exc.
 variable_initialization:  variable_type VAR_NAME  ;
-variable_assignment:  VAR_NAME EQUAL_SIGN variable_value ; // !! Assignement Επιπλέον, η σύνθετη παράσταση μπορεί να είναι οποιαδήποτε αριθμητική παράσταση που περιλαμβάνει τις πράξεις +, -, *, /.  
+ 
 
 variable_value:  INT_VALUE | CHAR_VALUE | DOUBLE_VALUE | BOOLEAN_VALUE | STRING_VALUE ; 
 
@@ -152,7 +169,7 @@ default: DEFAULT COLON switch_content ;
 
 // IF 
 if: IF BRACKET_LEFT if_condition BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT else_if{printf("\n If is identified\n");};
-else_if: %empty | ELSE IF CURLY_BRACKET_LEFT  inside_brackets CURLY_BRACKET_RIGHT else_if else | else {printf("\n If is identified\n");};
+else_if: %empty | ELSE IF BRACKET_LEFT if_condition BRACKET_RIGHT CURLY_BRACKET_LEFT  inside_brackets CURLY_BRACKET_RIGHT else_if {printf("else if \n");} | else {printf("\n If is identified\n");};
 else: ELSE CURLY_BRACKET_LEFT  inside_brackets CURLY_BRACKET_RIGHT {printf("\n Else is identified\n");};     
 if_condition: operand  CONDITION_SYMBOL operand if_bool_operator| BOOLEAN_VALUE | VAR_NAME {printf("\n If Condition is identified\n");};
 if_bool_operator: %empty | BOOL_SYMBOL if_condition;
