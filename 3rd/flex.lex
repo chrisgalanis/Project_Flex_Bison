@@ -1,7 +1,6 @@
 %{
 #include<stdio.h>
 #include "parser.tab.h"
-
 %}
 
 INT "int"

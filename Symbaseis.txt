@@ -1,0 +1,3 @@
+1st Question:
+    - Function are either public or private
+    - Variable expressions' rule is not ambiguous 
