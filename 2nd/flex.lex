@@ -39,10 +39,17 @@ PRIVATE "private"
 "," {return COMMA;}
 "." {return DOT;}
 
+"+" {return PLUS;}
+"-" {return MINUS;}
+"*" {return MULTIPLY;}
+"/" {return DIVIDE;}
+
 
 {FOR} {printf("\n FOR \n"); return FOR;}
 {DO} {printf("\n DO \n"); return DO;}
 {WHILE} {return WHILE;}
+{IF} { return IF;}
+{ELSE} {return ELSE;}
 
 {SWITCH}  {return SWITCH;}
 {CASE}    {return CASE; }
@@ -59,7 +66,6 @@ PRIVATE "private"
 {VOID} {return VOID;}
 {INT} {return INT;}
 {CHAR} {return CHAR;}
-{STRING} {return STRING;}
 {DOUBLE} {return DOUBLE;}
 {BOOLEAN} {return BOOLEAN;}
 
@@ -69,11 +75,15 @@ PRIVATE "private"
 {NEW} {return NEW;}
 [A-Z][a-z]* {printf("\nCLASS NAME\n"); return CLASS_NAME;}
 
+
 [+|-]?[0-9]+ { yylval.ival = atoi(yytext); return INT_VALUE;}
 ['][ -~]?['] { yylval.cval = yytext[1]; return CHAR_VALUE;}
 ["][ -~]+["] { yylval.sval = strdup(yytext); return STRING_VALUE;}
 {TRUE}|{FALSE} { yylval.sval = strdup(yytext); return BOOLEAN_VALUE;}
 [A-Za-z][A-Za-z0-9_]* { yylval.sval = strdup(yytext); printf("\nVAR NAME\n");return VAR_NAME;}
+
+"//"([ -~	]+) {printf("\nCOMMENT\n");}
+"/*"([ -~   \n]+)"*/" {printf("\nCOMMENTS\n");}
 [ \t\n] {}
 %%
 

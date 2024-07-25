@@ -3,17 +3,11 @@ Terminals unused in grammar
     SINGLE_MARK
 
 
-Rules useless in parser due to conflicts
-
-   77 operand: VAR_NAME
-
-
-State 17 conflicts: 1 shift/reduce
-State 18 conflicts: 1 shift/reduce
-State 19 conflicts: 1 shift/reduce
-State 20 conflicts: 1 shift/reduce
-State 21 conflicts: 1 shift/reduce
-State 147 conflicts: 2 reduce/reduce
+State 9 conflicts: 5 reduce/reduce
+State 10 conflicts: 5 reduce/reduce
+State 85 conflicts: 1 shift/reduce
+State 86 conflicts: 1 shift/reduce
+State 153 conflicts: 2 reduce/reduce
 
 
 Grammar
@@ -21,285 +15,425 @@ Grammar
     0 $accept: program $end
 
     1 program: ε
-    2        | class_identifier
+    2        | class_identifier program
 
     3 class_identifier: PUBLIC CLASS CLASS_NAME CURLY_BRACKET_LEFT class_body CURLY_BRACKET_RIGHT
 
     4 class_body: ε
     5           | functions class_body
     6           | class_members class_body
+    7           | class_identifier class_body
 
-    7 class_members: visibility variable_initialization SEMICOLON
-    8              | visibility variable_assignment SEMICOLON
+    8 class_members: visibility variable_initialization SEMICOLON
+    9              | variable_assignment SEMICOLON
+   10              | member_access SEMICOLON
 
-    9 variable_initialization: variable_type VAR_NAME
+   11 variable_initialization: INT int_init next_int
+   12                        | DOUBLE doulbe_init next_double
+   13                        | CHAR char_init next_char
+   14                        | BOOLEAN bool_init next_bool
+   15                        | STRING string_init next_string
 
-   10 variable_assignment: INT VAR_NAME EQUAL_SIGN INT_VALUE
-   11                    | DOUBLE VAR_NAME EQUAL_SIGN DOUBLE_VALUE
-   12                    | CHAR VAR_NAME EQUAL_SIGN CHAR_VALUE
-   13                    | BOOLEAN VAR_NAME EQUAL_SIGN BOOLEAN_VALUE
-   14                    | STRING VAR_NAME EQUAL_SIGN STRING_VALUE
+   16 next_int: ε
+   17         | COMMA int_init next_int
 
-   15 visibility: PUBLIC
-   16           | PRIVATE
-   17           | ε
+   18 next_double: ε
+   19            | COMMA doulbe_init next_double
 
-   18 variable_value: INT_VALUE
-   19               | CHAR_VALUE
-   20               | DOUBLE_VALUE
-   21               | BOOLEAN_VALUE
-   22               | STRING_VALUE
+   20 next_char: ε
+   21          | COMMA char_init next_char
 
-   23 variable_type: INT
-   24              | DOUBLE
-   25              | CHAR
-   26              | BOOLEAN
-   27              | STRING
+   22 next_bool: ε
+   23          | COMMA bool_init next_bool
 
-   28 class_instance: CLASS_NAME VAR_NAME EQUAL_SIGN NEW CLASS_NAME BRACKET_LEFT BRACKET_RIGHT
+   24 next_string: ε
+   25            | COMMA string_init next_string
 
-   29 member_access: VAR_NAME DOT VAR_NAME
+   26 int_init: VAR_NAME
+   27         | VAR_NAME EQUAL_SIGN INT_VALUE
 
-   30 functions: visibility VOID VAR_NAME BRACKET_LEFT arguments BRACKET_RIGHT CURLY_BRACKET_LEFT inside_void_function CURLY_BRACKET_RIGHT
-   31          | visibility variable_type VAR_NAME BRACKET_LEFT arguments BRACKET_RIGHT CURLY_BRACKET_LEFT inside_function CURLY_BRACKET_RIGHT
+   28 doulbe_init: VAR_NAME
+   29            | VAR_NAME EQUAL_SIGN DOUBLE_VALUE
 
-   32 arguments: ε
-   33          | parameters
+   30 char_init: VAR_NAME
+   31          | VAR_NAME EQUAL_SIGN CHAR_VALUE
 
-   34 parameters: variable_type VAR_NAME arguments_end
+   32 bool_init: VAR_NAME
+   33          | VAR_NAME EQUAL_SIGN BOOLEAN_VALUE
 
-   35 arguments_end: ε
-   36              | COMMA parameters
+   34 string_init: VAR_NAME
+   35            | VAR_NAME EQUAL_SIGN STRING_VALUE
 
-   37 inside_void_function: inside_brackets
-   38                     | inside_brackets RETURN SEMICOLON
+   36 $@1: ε
 
-   39 inside_function: inside_brackets RETURN VAR_NAME SEMICOLON
-   40                | inside_brackets RETURN variable_value SEMICOLON
+   37 variable_assignment: VAR_NAME $@1 EQUAL_SIGN expression
 
-   41 inside_brackets: ε
-   42                | loops_n_condition inside_brackets
+   38 expression: expression PLUS term
+   39           | expression MINUS term
+   40           | BRACKET_LEFT expression BRACKET_RIGHT
+   41           | term
 
-   43 loops_n_condition: for_statement
-   44                  | switch
-   45                  | do_while
-   46                  | variable_initialization SEMICOLON
-   47                  | variable_assignment SEMICOLON
-   48                  | class_instance SEMICOLON
-   49                  | member_access SEMICOLON
+   42 term: term MULTIPLY id
+   43     | term DIVIDE id
+   44     | BRACKET_LEFT term BRACKET_RIGHT
+   45     | id
 
-   50 for_statement: FOR BRACKET_LEFT for_condition BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT
+   46 id: variable_value
+   47   | VAR_NAME
+   48   | BRACKET_LEFT id BRACKET_RIGHT
 
-   51 for_condition: for_variable SEMICOLON for_comparison SEMICOLON for_step
+   49 visibility: PUBLIC
+   50           | PRIVATE
+   51           | ε
 
-   52 for_variable: ε
-   53             | variable_assignment
+   52 variable_value: INT_VALUE
+   53               | CHAR_VALUE
+   54               | DOUBLE_VALUE
+   55               | BOOLEAN_VALUE
+   56               | STRING_VALUE
 
-   54 for_comparison: ε
-   55               | VAR_NAME CONDITION_SYMBOL comparison_value bool_operator
+   57 variable_type: INT
+   58              | DOUBLE
+   59              | CHAR
+   60              | BOOLEAN
+   61              | STRING
 
-   56 comparison_value: INT_VALUE
-   57                 | DOUBLE_VALUE
-   58                 | CHAR_VALUE
-   59                 | BOOLEAN_VALUE
-   60                 | VAR_NAME
+   62 class_instance: CLASS_NAME VAR_NAME EQUAL_SIGN NEW CLASS_NAME BRACKET_LEFT BRACKET_RIGHT
 
-   61 bool_operator: ε
-   62              | BOOL_SYMBOL for_comparison
+   63 member_access: VAR_NAME DOT VAR_NAME
 
-   63 for_step: ε
-   64         | VAR_NAME step
+   64 functions: function_visibility VOID VAR_NAME BRACKET_LEFT arguments BRACKET_RIGHT CURLY_BRACKET_LEFT inside_void_function CURLY_BRACKET_RIGHT
+   65          | function_visibility variable_type VAR_NAME BRACKET_LEFT arguments BRACKET_RIGHT CURLY_BRACKET_LEFT inside_function CURLY_BRACKET_RIGHT
 
-   65 step: INCREAMENT_DECREAMENT
-   66     | LOOP_STEP step_value
+   66 function_visibility: PRIVATE
+   67                    | PUBLIC
 
-   67 step_value: INT_VALUE
-   68           | DOUBLE_VALUE
+   68 arguments: ε
+   69          | parameters
 
-   69 do_while: DO CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT WHILE BRACKET_LEFT do_condition BRACKET_RIGHT SEMICOLON
+   70 parameters: variable_type VAR_NAME arguments_end
 
-   70 do_condition: operand CONDITION_SYMBOL operand
-   71             | BOOLEAN_VALUE
+   71 arguments_end: ε
+   72              | COMMA parameters
 
-   72 operand: VAR_NAME
-   73        | INT_VALUE
-   74        | DOUBLE_VALUE
-   75        | CHAR_VALUE
-   76        | BOOLEAN_VALUE
-   77        | VAR_NAME
+   73 inside_void_function: inside_brackets
+   74                     | inside_brackets RETURN SEMICOLON
 
-   78 switch: SWITCH BRACKET_LEFT VAR_NAME BRACKET_RIGHT CURLY_BRACKET_LEFT case default CURLY_BRACKET_RIGHT
+   75 inside_function: inside_brackets RETURN VAR_NAME SEMICOLON
+   76                | inside_brackets RETURN variable_value SEMICOLON
 
-   79 case: CASE switch_value COLON switch_content case
-   80     | ε
+   77 inside_brackets: ε
+   78                | loops_n_condition inside_brackets
+   79                | variable_assignment SEMICOLON
 
-   81 switch_value: INT_VALUE
-   82             | CHAR_VALUE
+   80 loops_n_condition: for_statement
+   81                  | switch
+   82                  | do_while
+   83                  | if
+   84                  | variable_initialization SEMICOLON
+   85                  | variable_assignment SEMICOLON
+   86                  | class_instance SEMICOLON
+   87                  | member_access SEMICOLON
 
-   83 switch_content: ε
-   84               | BREAK
+   88 for_statement: FOR BRACKET_LEFT for_condition BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT
 
-   85 default: DEFAULT COLON switch_content
-   86        | ε
+   89 for_condition: for_variable SEMICOLON for_comparison SEMICOLON for_step
+
+   90 for_variable: ε
+   91             | variable_type VAR_NAME EQUAL_SIGN variable_value
+
+   92 for_comparison: ε
+   93               | VAR_NAME CONDITION_SYMBOL comparison_value for_bool_operator
+
+   94 comparison_value: INT_VALUE
+   95                 | DOUBLE_VALUE
+   96                 | CHAR_VALUE
+   97                 | BOOLEAN_VALUE
+   98                 | VAR_NAME
+
+   99 for_bool_operator: ε
+  100                  | BOOL_SYMBOL for_comparison
+
+  101 for_step: ε
+  102         | VAR_NAME step
+
+  103 step: INCREAMENT_DECREAMENT
+  104     | LOOP_STEP step_value
+
+  105 step_value: INT_VALUE
+  106           | DOUBLE_VALUE
+
+  107 do_while: DO CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT WHILE BRACKET_LEFT do_condition BRACKET_RIGHT SEMICOLON
+
+  108 do_condition: operand CONDITION_SYMBOL operand do_bool_operator
+  109             | BOOLEAN_VALUE
+  110             | VAR_NAME
+
+  111 do_bool_operator: ε
+  112                 | BOOL_SYMBOL do_condition
+
+  113 operand: VAR_NAME
+  114        | INT_VALUE
+  115        | DOUBLE_VALUE
+  116        | CHAR_VALUE
+  117        | BOOLEAN_VALUE
+
+  118 switch: SWITCH BRACKET_LEFT VAR_NAME BRACKET_RIGHT CURLY_BRACKET_LEFT case default CURLY_BRACKET_RIGHT
+
+  119 case: CASE switch_value COLON switch_content case
+  120     | ε
+
+  121 switch_value: INT_VALUE
+  122             | CHAR_VALUE
+
+  123 switch_content: ε
+  124               | BREAK SEMICOLON
+
+  125 default: DEFAULT COLON switch_content
+  126        | ε
+
+  127 if: IF BRACKET_LEFT if_condition BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT else_if
+
+  128 else_if: ε
+  129        | ELSE IF BRACKET_LEFT if_condition BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT else_if
+  130        | else
+
+  131 else: ELSE CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT
+
+  132 if_condition: operand CONDITION_SYMBOL operand if_bool_operator
+  133             | BOOLEAN_VALUE
+  134             | VAR_NAME
+
+  135 if_bool_operator: ε
+  136                 | BOOL_SYMBOL if_condition
 
 
 Terminals, with rules where they appear
 
     $end (0) 0
     error (256)
-    CURLY_BRACKET_LEFT (258) 3 30 31 50 69 78
-    CURLY_BRACKET_RIGHT (259) 3 30 31 50 69 78
-    BRACKET_LEFT (260) 28 30 31 50 69 78
-    BRACKET_RIGHT (261) 28 30 31 50 69 78
-    EQUAL_SIGN (262) 10 11 12 13 14 28
-    SEMICOLON (263) 7 8 38 39 40 46 47 48 49 51 69
+    CURLY_BRACKET_LEFT (258) 3 64 65 88 107 118 127 129 131
+    CURLY_BRACKET_RIGHT (259) 3 64 65 88 107 118 127 129 131
+    BRACKET_LEFT (260) 40 44 48 62 64 65 88 107 118 127 129
+    BRACKET_RIGHT (261) 40 44 48 62 64 65 88 107 118 127 129
+    EQUAL_SIGN (262) 27 29 31 33 35 37 62 91
+    SEMICOLON (263) 8 9 10 74 75 76 79 84 85 86 87 89 107 124
     SINGLE_MARK (264)
-    COLON (265) 79 85
-    COMMA (266) 36
-    DOT (267) 29
-    PUBLIC <sval> (268) 3 15
-    PRIVATE <sval> (269) 16
-    CLASS (270) 3
-    CLASS_NAME <sval> (271) 3 28
-    NEW (272) 28
-    FOR (273) 50
-    DO (274) 69
-    WHILE (275) 69
-    CONDITION_SYMBOL (276) 55 70
-    BOOL_SYMBOL (277) 62
-    INCREAMENT_DECREAMENT (278) 65
-    LOOP_STEP (279) 66
-    SWITCH (280) 78
-    CASE (281) 79
-    DEFAULT (282) 85
-    BREAK (283) 84
-    RETURN (284) 38 39 40
-    VAR_NAME <sval> (285) 9 10 11 12 13 14 28 29 30 31 34 39 55 60 64 72 77 78
-    VOID (286) 30
-    INT (287) 10 23
-    CHAR (288) 12 25
-    DOUBLE (289) 11 24
-    BOOLEAN (290) 13 26
-    STRING (291) 14 27
-    INT_VALUE <ival> (292) 10 18 56 67 73 81
-    CHAR_VALUE <cval> (293) 12 19 58 75 82
-    DOUBLE_VALUE <dval> (294) 11 20 57 68 74
-    BOOLEAN_VALUE <sval> (295) 13 21 59 71 76
-    STRING_VALUE <sval> (296) 14 22
+    COLON (265) 119 125
+    COMMA (266) 17 19 21 23 25 72
+    DOT (267) 63
+    PLUS (268) 38
+    MINUS (269) 39
+    MULTIPLY (270) 42
+    DIVIDE (271) 43
+    PUBLIC <sval> (272) 3 49 67
+    PRIVATE <sval> (273) 50 66
+    CLASS (274) 3
+    CLASS_NAME <sval> (275) 3 62
+    NEW (276) 62
+    IF (277) 127 129
+    ELSE (278) 129 131
+    FOR (279) 88
+    DO (280) 107
+    WHILE (281) 107
+    CONDITION_SYMBOL (282) 93 108 132
+    BOOL_SYMBOL (283) 100 112 136
+    INCREAMENT_DECREAMENT (284) 103
+    LOOP_STEP (285) 104
+    SWITCH (286) 118
+    CASE (287) 119
+    DEFAULT (288) 125
+    BREAK (289) 124
+    RETURN (290) 74 75 76
+    VAR_NAME <sval> (291) 26 27 28 29 30 31 32 33 34 35 37 47 62 63 64 65 70 75 91 93 98 102 110 113 118 134
+    VOID (292) 64
+    INT (293) 11 57
+    CHAR (294) 13 59
+    DOUBLE (295) 12 58
+    BOOLEAN (296) 14 60
+    STRING (297) 15 61
+    INT_VALUE <ival> (298) 27 52 94 105 114 121
+    CHAR_VALUE <cval> (299) 31 53 96 116 122
+    DOUBLE_VALUE <dval> (300) 29 54 95 106 115
+    BOOLEAN_VALUE <sval> (301) 33 55 97 109 117 133
+    STRING_VALUE <sval> (302) 35 56
 
 
 Nonterminals, with rules where they appear
 
-    $accept (42)
+    $accept (48)
         on left: 0
-    program (43)
+    program (49)
         on left: 1 2
-        on right: 0
-    class_identifier (44)
+        on right: 0 2
+    class_identifier (50)
         on left: 3
-        on right: 2
-    class_body (45)
-        on left: 4 5 6
-        on right: 3 5 6
-    class_members (46)
-        on left: 7 8
+        on right: 2 7
+    class_body (51)
+        on left: 4 5 6 7
+        on right: 3 5 6 7
+    class_members (52)
+        on left: 8 9 10
         on right: 6
-    variable_initialization (47)
-        on left: 9
-        on right: 7 46
-    variable_assignment (48)
-        on left: 10 11 12 13 14
-        on right: 8 47 53
-    visibility (49)
-        on left: 15 16 17
-        on right: 7 8 30 31
-    variable_value (50)
-        on left: 18 19 20 21 22
-        on right: 40
-    variable_type (51)
-        on left: 23 24 25 26 27
-        on right: 9 31 34
-    class_instance (52)
-        on left: 28
-        on right: 48
-    member_access (53)
-        on left: 29
-        on right: 49
-    functions (54)
+    variable_initialization (53)
+        on left: 11 12 13 14 15
+        on right: 8 84
+    next_int (54)
+        on left: 16 17
+        on right: 11 17
+    next_double (55)
+        on left: 18 19
+        on right: 12 19
+    next_char (56)
+        on left: 20 21
+        on right: 13 21
+    next_bool (57)
+        on left: 22 23
+        on right: 14 23
+    next_string (58)
+        on left: 24 25
+        on right: 15 25
+    int_init (59)
+        on left: 26 27
+        on right: 11 17
+    doulbe_init (60)
+        on left: 28 29
+        on right: 12 19
+    char_init (61)
         on left: 30 31
-        on right: 5
-    arguments (55)
+        on right: 13 21
+    bool_init (62)
         on left: 32 33
-        on right: 30 31
-    parameters (56)
-        on left: 34
-        on right: 33 36
-    arguments_end (57)
-        on left: 35 36
-        on right: 34
-    inside_void_function (58)
-        on left: 37 38
-        on right: 30
-    inside_function (59)
-        on left: 39 40
-        on right: 31
-    inside_brackets (60)
-        on left: 41 42
-        on right: 37 38 39 40 42 50 69
-    loops_n_condition (61)
-        on left: 43 44 45 46 47 48 49
-        on right: 42
-    for_statement (62)
-        on left: 50
-        on right: 43
-    for_condition (63)
-        on left: 51
-        on right: 50
-    for_variable (64)
-        on left: 52 53
-        on right: 51
-    for_comparison (65)
-        on left: 54 55
-        on right: 51 62
-    comparison_value (66)
-        on left: 56 57 58 59 60
-        on right: 55
-    bool_operator (67)
-        on left: 61 62
-        on right: 55
-    for_step (68)
-        on left: 63 64
-        on right: 51
-    step (69)
-        on left: 65 66
-        on right: 64
-    step_value (70)
-        on left: 67 68
-        on right: 66
-    do_while (71)
-        on left: 69
-        on right: 45
-    do_condition (72)
-        on left: 70 71
-        on right: 69
-    operand (73)
-        on left: 72 73 74 75 76 77
+        on right: 14 23
+    string_init (63)
+        on left: 34 35
+        on right: 15 25
+    variable_assignment (64)
+        on left: 37
+        on right: 9 79 85
+    $@1 (65)
+        on left: 36
+        on right: 37
+    expression (66)
+        on left: 38 39 40 41
+        on right: 37 38 39 40
+    term (67)
+        on left: 42 43 44 45
+        on right: 38 39 41 42 43 44
+    id (68)
+        on left: 46 47 48
+        on right: 42 43 45 48
+    visibility (69)
+        on left: 49 50 51
+        on right: 8
+    variable_value (70)
+        on left: 52 53 54 55 56
+        on right: 46 76 91
+    variable_type (71)
+        on left: 57 58 59 60 61
+        on right: 65 70 91
+    class_instance (72)
+        on left: 62
+        on right: 86
+    member_access (73)
+        on left: 63
+        on right: 10 87
+    functions (74)
+        on left: 64 65
+        on right: 5
+    function_visibility (75)
+        on left: 66 67
+        on right: 64 65
+    arguments (76)
+        on left: 68 69
+        on right: 64 65
+    parameters (77)
+        on left: 70
+        on right: 69 72
+    arguments_end (78)
+        on left: 71 72
         on right: 70
-    switch (74)
-        on left: 78
-        on right: 44
-    case (75)
-        on left: 79 80
-        on right: 78 79
-    switch_value (76)
-        on left: 81 82
-        on right: 79
-    switch_content (77)
-        on left: 83 84
-        on right: 79 85
-    default (78)
-        on left: 85 86
+    inside_void_function (79)
+        on left: 73 74
+        on right: 64
+    inside_function (80)
+        on left: 75 76
+        on right: 65
+    inside_brackets (81)
+        on left: 77 78 79
+        on right: 73 74 75 76 78 88 107 127 129 131
+    loops_n_condition (82)
+        on left: 80 81 82 83 84 85 86 87
         on right: 78
+    for_statement (83)
+        on left: 88
+        on right: 80
+    for_condition (84)
+        on left: 89
+        on right: 88
+    for_variable (85)
+        on left: 90 91
+        on right: 89
+    for_comparison (86)
+        on left: 92 93
+        on right: 89 100
+    comparison_value (87)
+        on left: 94 95 96 97 98
+        on right: 93
+    for_bool_operator (88)
+        on left: 99 100
+        on right: 93
+    for_step (89)
+        on left: 101 102
+        on right: 89
+    step (90)
+        on left: 103 104
+        on right: 102
+    step_value (91)
+        on left: 105 106
+        on right: 104
+    do_while (92)
+        on left: 107
+        on right: 82
+    do_condition (93)
+        on left: 108 109 110
+        on right: 107 112
+    do_bool_operator (94)
+        on left: 111 112
+        on right: 108
+    operand (95)
+        on left: 113 114 115 116 117
+        on right: 108 132
+    switch (96)
+        on left: 118
+        on right: 81
+    case (97)
+        on left: 119 120
+        on right: 118 119
+    switch_value (98)
+        on left: 121 122
+        on right: 119
+    switch_content (99)
+        on left: 123 124
+        on right: 119 125
+    default (100)
+        on left: 125 126
+        on right: 118
+    if (101)
+        on left: 127
+        on right: 83
+    else_if (102)
+        on left: 128 129 130
+        on right: 127 129
+    else (103)
+        on left: 131
+        on right: 130
+    if_condition (104)
+        on left: 132 133 134
+        on right: 127 129 136
+    if_bool_operator (105)
+        on left: 135 136
+        on right: 132
 
 
 State 0
@@ -330,16 +464,21 @@ State 2
 
 State 3
 
-    2 program: class_identifier •
+    2 program: class_identifier • program
 
-    $default  reduce using rule 2 (program)
+    PUBLIC  shift, and go to state 1
+
+    $default  reduce using rule 1 (program)
+
+    program           go to state 6
+    class_identifier  go to state 3
 
 
 State 4
 
     3 class_identifier: PUBLIC CLASS • CLASS_NAME CURLY_BRACKET_LEFT class_body CURLY_BRACKET_RIGHT
 
-    CLASS_NAME  shift, and go to state 6
+    CLASS_NAME  shift, and go to state 7
 
 
 State 5
@@ -351,1511 +490,2509 @@ State 5
 
 State 6
 
-    3 class_identifier: PUBLIC CLASS CLASS_NAME • CURLY_BRACKET_LEFT class_body CURLY_BRACKET_RIGHT
+    2 program: class_identifier program •
 
-    CURLY_BRACKET_LEFT  shift, and go to state 7
+    $default  reduce using rule 2 (program)
 
 
 State 7
 
-    3 class_identifier: PUBLIC CLASS CLASS_NAME CURLY_BRACKET_LEFT • class_body CURLY_BRACKET_RIGHT
+    3 class_identifier: PUBLIC CLASS CLASS_NAME • CURLY_BRACKET_LEFT class_body CURLY_BRACKET_RIGHT
 
-    PUBLIC   shift, and go to state 8
-    PRIVATE  shift, and go to state 9
-
-    CURLY_BRACKET_RIGHT  reduce using rule 4 (class_body)
-    $default             reduce using rule 17 (visibility)
-
-    class_body     go to state 10
-    class_members  go to state 11
-    visibility     go to state 12
-    functions      go to state 13
+    CURLY_BRACKET_LEFT  shift, and go to state 8
 
 
 State 8
 
-   15 visibility: PUBLIC •
+    3 class_identifier: PUBLIC CLASS CLASS_NAME CURLY_BRACKET_LEFT • class_body CURLY_BRACKET_RIGHT
 
-    $default  reduce using rule 15 (visibility)
+    PUBLIC    shift, and go to state 9
+    PRIVATE   shift, and go to state 10
+    VAR_NAME  shift, and go to state 11
+
+    CURLY_BRACKET_RIGHT  reduce using rule 4 (class_body)
+    $default             reduce using rule 51 (visibility)
+
+    class_identifier     go to state 12
+    class_body           go to state 13
+    class_members        go to state 14
+    variable_assignment  go to state 15
+    visibility           go to state 16
+    member_access        go to state 17
+    functions            go to state 18
+    function_visibility  go to state 19
 
 
 State 9
 
-   16 visibility: PRIVATE •
+    3 class_identifier: PUBLIC • CLASS CLASS_NAME CURLY_BRACKET_LEFT class_body CURLY_BRACKET_RIGHT
+   49 visibility: PUBLIC •
+   67 function_visibility: PUBLIC •
 
-    $default  reduce using rule 16 (visibility)
+    CLASS  shift, and go to state 4
+
+    VOID      reduce using rule 67 (function_visibility)
+    INT       reduce using rule 49 (visibility)
+    INT       [reduce using rule 67 (function_visibility)]
+    CHAR      reduce using rule 49 (visibility)
+    CHAR      [reduce using rule 67 (function_visibility)]
+    DOUBLE    reduce using rule 49 (visibility)
+    DOUBLE    [reduce using rule 67 (function_visibility)]
+    BOOLEAN   reduce using rule 49 (visibility)
+    BOOLEAN   [reduce using rule 67 (function_visibility)]
+    STRING    reduce using rule 49 (visibility)
+    STRING    [reduce using rule 67 (function_visibility)]
+    $default  reduce using rule 49 (visibility)
 
 
 State 10
 
-    3 class_identifier: PUBLIC CLASS CLASS_NAME CURLY_BRACKET_LEFT class_body • CURLY_BRACKET_RIGHT
+   50 visibility: PRIVATE •
+   66 function_visibility: PRIVATE •
 
-    CURLY_BRACKET_RIGHT  shift, and go to state 14
+    VOID      reduce using rule 66 (function_visibility)
+    INT       reduce using rule 50 (visibility)
+    INT       [reduce using rule 66 (function_visibility)]
+    CHAR      reduce using rule 50 (visibility)
+    CHAR      [reduce using rule 66 (function_visibility)]
+    DOUBLE    reduce using rule 50 (visibility)
+    DOUBLE    [reduce using rule 66 (function_visibility)]
+    BOOLEAN   reduce using rule 50 (visibility)
+    BOOLEAN   [reduce using rule 66 (function_visibility)]
+    STRING    reduce using rule 50 (visibility)
+    STRING    [reduce using rule 66 (function_visibility)]
+    $default  reduce using rule 50 (visibility)
 
 
 State 11
 
-    6 class_body: class_members • class_body
+   37 variable_assignment: VAR_NAME • $@1 EQUAL_SIGN expression
+   63 member_access: VAR_NAME • DOT VAR_NAME
 
-    PUBLIC   shift, and go to state 8
-    PRIVATE  shift, and go to state 9
+    DOT  shift, and go to state 20
 
-    CURLY_BRACKET_RIGHT  reduce using rule 4 (class_body)
-    $default             reduce using rule 17 (visibility)
+    $default  reduce using rule 36 ($@1)
 
-    class_body     go to state 15
-    class_members  go to state 11
-    visibility     go to state 12
-    functions      go to state 13
+    $@1  go to state 21
 
 
 State 12
 
-    7 class_members: visibility • variable_initialization SEMICOLON
-    8              | visibility • variable_assignment SEMICOLON
-   30 functions: visibility • VOID VAR_NAME BRACKET_LEFT arguments BRACKET_RIGHT CURLY_BRACKET_LEFT inside_void_function CURLY_BRACKET_RIGHT
-   31          | visibility • variable_type VAR_NAME BRACKET_LEFT arguments BRACKET_RIGHT CURLY_BRACKET_LEFT inside_function CURLY_BRACKET_RIGHT
+    7 class_body: class_identifier • class_body
 
-    VOID     shift, and go to state 16
-    INT      shift, and go to state 17
-    CHAR     shift, and go to state 18
-    DOUBLE   shift, and go to state 19
-    BOOLEAN  shift, and go to state 20
-    STRING   shift, and go to state 21
+    PUBLIC    shift, and go to state 9
+    PRIVATE   shift, and go to state 10
+    VAR_NAME  shift, and go to state 11
 
-    variable_initialization  go to state 22
-    variable_assignment      go to state 23
-    variable_type            go to state 24
+    CURLY_BRACKET_RIGHT  reduce using rule 4 (class_body)
+    $default             reduce using rule 51 (visibility)
+
+    class_identifier     go to state 12
+    class_body           go to state 22
+    class_members        go to state 14
+    variable_assignment  go to state 15
+    visibility           go to state 16
+    member_access        go to state 17
+    functions            go to state 18
+    function_visibility  go to state 19
 
 
 State 13
 
-    5 class_body: functions • class_body
+    3 class_identifier: PUBLIC CLASS CLASS_NAME CURLY_BRACKET_LEFT class_body • CURLY_BRACKET_RIGHT
 
-    PUBLIC   shift, and go to state 8
-    PRIVATE  shift, and go to state 9
-
-    CURLY_BRACKET_RIGHT  reduce using rule 4 (class_body)
-    $default             reduce using rule 17 (visibility)
-
-    class_body     go to state 25
-    class_members  go to state 11
-    visibility     go to state 12
-    functions      go to state 13
+    CURLY_BRACKET_RIGHT  shift, and go to state 23
 
 
 State 14
+
+    6 class_body: class_members • class_body
+
+    PUBLIC    shift, and go to state 9
+    PRIVATE   shift, and go to state 10
+    VAR_NAME  shift, and go to state 11
+
+    CURLY_BRACKET_RIGHT  reduce using rule 4 (class_body)
+    $default             reduce using rule 51 (visibility)
+
+    class_identifier     go to state 12
+    class_body           go to state 24
+    class_members        go to state 14
+    variable_assignment  go to state 15
+    visibility           go to state 16
+    member_access        go to state 17
+    functions            go to state 18
+    function_visibility  go to state 19
+
+
+State 15
+
+    9 class_members: variable_assignment • SEMICOLON
+
+    SEMICOLON  shift, and go to state 25
+
+
+State 16
+
+    8 class_members: visibility • variable_initialization SEMICOLON
+
+    INT      shift, and go to state 26
+    CHAR     shift, and go to state 27
+    DOUBLE   shift, and go to state 28
+    BOOLEAN  shift, and go to state 29
+    STRING   shift, and go to state 30
+
+    variable_initialization  go to state 31
+
+
+State 17
+
+   10 class_members: member_access • SEMICOLON
+
+    SEMICOLON  shift, and go to state 32
+
+
+State 18
+
+    5 class_body: functions • class_body
+
+    PUBLIC    shift, and go to state 9
+    PRIVATE   shift, and go to state 10
+    VAR_NAME  shift, and go to state 11
+
+    CURLY_BRACKET_RIGHT  reduce using rule 4 (class_body)
+    $default             reduce using rule 51 (visibility)
+
+    class_identifier     go to state 12
+    class_body           go to state 33
+    class_members        go to state 14
+    variable_assignment  go to state 15
+    visibility           go to state 16
+    member_access        go to state 17
+    functions            go to state 18
+    function_visibility  go to state 19
+
+
+State 19
+
+   64 functions: function_visibility • VOID VAR_NAME BRACKET_LEFT arguments BRACKET_RIGHT CURLY_BRACKET_LEFT inside_void_function CURLY_BRACKET_RIGHT
+   65          | function_visibility • variable_type VAR_NAME BRACKET_LEFT arguments BRACKET_RIGHT CURLY_BRACKET_LEFT inside_function CURLY_BRACKET_RIGHT
+
+    VOID     shift, and go to state 34
+    INT      shift, and go to state 35
+    CHAR     shift, and go to state 36
+    DOUBLE   shift, and go to state 37
+    BOOLEAN  shift, and go to state 38
+    STRING   shift, and go to state 39
+
+    variable_type  go to state 40
+
+
+State 20
+
+   63 member_access: VAR_NAME DOT • VAR_NAME
+
+    VAR_NAME  shift, and go to state 41
+
+
+State 21
+
+   37 variable_assignment: VAR_NAME $@1 • EQUAL_SIGN expression
+
+    EQUAL_SIGN  shift, and go to state 42
+
+
+State 22
+
+    7 class_body: class_identifier class_body •
+
+    $default  reduce using rule 7 (class_body)
+
+
+State 23
 
     3 class_identifier: PUBLIC CLASS CLASS_NAME CURLY_BRACKET_LEFT class_body CURLY_BRACKET_RIGHT •
 
     $default  reduce using rule 3 (class_identifier)
 
 
-State 15
+State 24
 
     6 class_body: class_members class_body •
 
     $default  reduce using rule 6 (class_body)
 
 
-State 16
-
-   30 functions: visibility VOID • VAR_NAME BRACKET_LEFT arguments BRACKET_RIGHT CURLY_BRACKET_LEFT inside_void_function CURLY_BRACKET_RIGHT
-
-    VAR_NAME  shift, and go to state 26
-
-
-State 17
-
-   10 variable_assignment: INT • VAR_NAME EQUAL_SIGN INT_VALUE
-   23 variable_type: INT •
-
-    VAR_NAME  shift, and go to state 27
-
-    VAR_NAME  [reduce using rule 23 (variable_type)]
-
-
-State 18
-
-   12 variable_assignment: CHAR • VAR_NAME EQUAL_SIGN CHAR_VALUE
-   25 variable_type: CHAR •
-
-    VAR_NAME  shift, and go to state 28
-
-    VAR_NAME  [reduce using rule 25 (variable_type)]
-
-
-State 19
-
-   11 variable_assignment: DOUBLE • VAR_NAME EQUAL_SIGN DOUBLE_VALUE
-   24 variable_type: DOUBLE •
-
-    VAR_NAME  shift, and go to state 29
-
-    VAR_NAME  [reduce using rule 24 (variable_type)]
-
-
-State 20
-
-   13 variable_assignment: BOOLEAN • VAR_NAME EQUAL_SIGN BOOLEAN_VALUE
-   26 variable_type: BOOLEAN •
-
-    VAR_NAME  shift, and go to state 30
-
-    VAR_NAME  [reduce using rule 26 (variable_type)]
-
-
-State 21
-
-   14 variable_assignment: STRING • VAR_NAME EQUAL_SIGN STRING_VALUE
-   27 variable_type: STRING •
-
-    VAR_NAME  shift, and go to state 31
-
-    VAR_NAME  [reduce using rule 27 (variable_type)]
-
-
-State 22
-
-    7 class_members: visibility variable_initialization • SEMICOLON
-
-    SEMICOLON  shift, and go to state 32
-
-
-State 23
-
-    8 class_members: visibility variable_assignment • SEMICOLON
-
-    SEMICOLON  shift, and go to state 33
-
-
-State 24
-
-    9 variable_initialization: variable_type • VAR_NAME
-   31 functions: visibility variable_type • VAR_NAME BRACKET_LEFT arguments BRACKET_RIGHT CURLY_BRACKET_LEFT inside_function CURLY_BRACKET_RIGHT
-
-    VAR_NAME  shift, and go to state 34
-
-
 State 25
+
+    9 class_members: variable_assignment SEMICOLON •
+
+    $default  reduce using rule 9 (class_members)
+
+
+State 26
+
+   11 variable_initialization: INT • int_init next_int
+
+    VAR_NAME  shift, and go to state 43
+
+    int_init  go to state 44
+
+
+State 27
+
+   13 variable_initialization: CHAR • char_init next_char
+
+    VAR_NAME  shift, and go to state 45
+
+    char_init  go to state 46
+
+
+State 28
+
+   12 variable_initialization: DOUBLE • doulbe_init next_double
+
+    VAR_NAME  shift, and go to state 47
+
+    doulbe_init  go to state 48
+
+
+State 29
+
+   14 variable_initialization: BOOLEAN • bool_init next_bool
+
+    VAR_NAME  shift, and go to state 49
+
+    bool_init  go to state 50
+
+
+State 30
+
+   15 variable_initialization: STRING • string_init next_string
+
+    VAR_NAME  shift, and go to state 51
+
+    string_init  go to state 52
+
+
+State 31
+
+    8 class_members: visibility variable_initialization • SEMICOLON
+
+    SEMICOLON  shift, and go to state 53
+
+
+State 32
+
+   10 class_members: member_access SEMICOLON •
+
+    $default  reduce using rule 10 (class_members)
+
+
+State 33
 
     5 class_body: functions class_body •
 
     $default  reduce using rule 5 (class_body)
 
 
-State 26
-
-   30 functions: visibility VOID VAR_NAME • BRACKET_LEFT arguments BRACKET_RIGHT CURLY_BRACKET_LEFT inside_void_function CURLY_BRACKET_RIGHT
-
-    BRACKET_LEFT  shift, and go to state 35
-
-
-State 27
-
-   10 variable_assignment: INT VAR_NAME • EQUAL_SIGN INT_VALUE
-
-    EQUAL_SIGN  shift, and go to state 36
-
-
-State 28
-
-   12 variable_assignment: CHAR VAR_NAME • EQUAL_SIGN CHAR_VALUE
-
-    EQUAL_SIGN  shift, and go to state 37
-
-
-State 29
-
-   11 variable_assignment: DOUBLE VAR_NAME • EQUAL_SIGN DOUBLE_VALUE
-
-    EQUAL_SIGN  shift, and go to state 38
-
-
-State 30
-
-   13 variable_assignment: BOOLEAN VAR_NAME • EQUAL_SIGN BOOLEAN_VALUE
-
-    EQUAL_SIGN  shift, and go to state 39
-
-
-State 31
-
-   14 variable_assignment: STRING VAR_NAME • EQUAL_SIGN STRING_VALUE
-
-    EQUAL_SIGN  shift, and go to state 40
-
-
-State 32
-
-    7 class_members: visibility variable_initialization SEMICOLON •
-
-    $default  reduce using rule 7 (class_members)
-
-
-State 33
-
-    8 class_members: visibility variable_assignment SEMICOLON •
-
-    $default  reduce using rule 8 (class_members)
-
-
 State 34
 
-    9 variable_initialization: variable_type VAR_NAME •
-   31 functions: visibility variable_type VAR_NAME • BRACKET_LEFT arguments BRACKET_RIGHT CURLY_BRACKET_LEFT inside_function CURLY_BRACKET_RIGHT
+   64 functions: function_visibility VOID • VAR_NAME BRACKET_LEFT arguments BRACKET_RIGHT CURLY_BRACKET_LEFT inside_void_function CURLY_BRACKET_RIGHT
 
-    BRACKET_LEFT  shift, and go to state 41
-
-    $default  reduce using rule 9 (variable_initialization)
+    VAR_NAME  shift, and go to state 54
 
 
 State 35
 
-   30 functions: visibility VOID VAR_NAME BRACKET_LEFT • arguments BRACKET_RIGHT CURLY_BRACKET_LEFT inside_void_function CURLY_BRACKET_RIGHT
+   57 variable_type: INT •
 
-    INT      shift, and go to state 42
-    CHAR     shift, and go to state 43
-    DOUBLE   shift, and go to state 44
-    BOOLEAN  shift, and go to state 45
-    STRING   shift, and go to state 46
-
-    $default  reduce using rule 32 (arguments)
-
-    variable_type  go to state 47
-    arguments      go to state 48
-    parameters     go to state 49
+    $default  reduce using rule 57 (variable_type)
 
 
 State 36
 
-   10 variable_assignment: INT VAR_NAME EQUAL_SIGN • INT_VALUE
+   59 variable_type: CHAR •
 
-    INT_VALUE  shift, and go to state 50
+    $default  reduce using rule 59 (variable_type)
 
 
 State 37
 
-   12 variable_assignment: CHAR VAR_NAME EQUAL_SIGN • CHAR_VALUE
+   58 variable_type: DOUBLE •
 
-    CHAR_VALUE  shift, and go to state 51
+    $default  reduce using rule 58 (variable_type)
 
 
 State 38
 
-   11 variable_assignment: DOUBLE VAR_NAME EQUAL_SIGN • DOUBLE_VALUE
+   60 variable_type: BOOLEAN •
 
-    DOUBLE_VALUE  shift, and go to state 52
+    $default  reduce using rule 60 (variable_type)
 
 
 State 39
 
-   13 variable_assignment: BOOLEAN VAR_NAME EQUAL_SIGN • BOOLEAN_VALUE
+   61 variable_type: STRING •
 
-    BOOLEAN_VALUE  shift, and go to state 53
+    $default  reduce using rule 61 (variable_type)
 
 
 State 40
 
-   14 variable_assignment: STRING VAR_NAME EQUAL_SIGN • STRING_VALUE
+   65 functions: function_visibility variable_type • VAR_NAME BRACKET_LEFT arguments BRACKET_RIGHT CURLY_BRACKET_LEFT inside_function CURLY_BRACKET_RIGHT
 
-    STRING_VALUE  shift, and go to state 54
+    VAR_NAME  shift, and go to state 55
 
 
 State 41
 
-   31 functions: visibility variable_type VAR_NAME BRACKET_LEFT • arguments BRACKET_RIGHT CURLY_BRACKET_LEFT inside_function CURLY_BRACKET_RIGHT
+   63 member_access: VAR_NAME DOT VAR_NAME •
 
-    INT      shift, and go to state 42
-    CHAR     shift, and go to state 43
-    DOUBLE   shift, and go to state 44
-    BOOLEAN  shift, and go to state 45
-    STRING   shift, and go to state 46
-
-    $default  reduce using rule 32 (arguments)
-
-    variable_type  go to state 47
-    arguments      go to state 55
-    parameters     go to state 49
+    $default  reduce using rule 63 (member_access)
 
 
 State 42
 
-   23 variable_type: INT •
+   37 variable_assignment: VAR_NAME $@1 EQUAL_SIGN • expression
 
-    $default  reduce using rule 23 (variable_type)
+    BRACKET_LEFT   shift, and go to state 56
+    VAR_NAME       shift, and go to state 57
+    INT_VALUE      shift, and go to state 58
+    CHAR_VALUE     shift, and go to state 59
+    DOUBLE_VALUE   shift, and go to state 60
+    BOOLEAN_VALUE  shift, and go to state 61
+    STRING_VALUE   shift, and go to state 62
+
+    expression      go to state 63
+    term            go to state 64
+    id              go to state 65
+    variable_value  go to state 66
 
 
 State 43
 
-   25 variable_type: CHAR •
+   26 int_init: VAR_NAME •
+   27         | VAR_NAME • EQUAL_SIGN INT_VALUE
 
-    $default  reduce using rule 25 (variable_type)
+    EQUAL_SIGN  shift, and go to state 67
+
+    $default  reduce using rule 26 (int_init)
 
 
 State 44
 
-   24 variable_type: DOUBLE •
+   11 variable_initialization: INT int_init • next_int
 
-    $default  reduce using rule 24 (variable_type)
+    COMMA  shift, and go to state 68
+
+    $default  reduce using rule 16 (next_int)
+
+    next_int  go to state 69
 
 
 State 45
 
-   26 variable_type: BOOLEAN •
+   30 char_init: VAR_NAME •
+   31          | VAR_NAME • EQUAL_SIGN CHAR_VALUE
 
-    $default  reduce using rule 26 (variable_type)
+    EQUAL_SIGN  shift, and go to state 70
+
+    $default  reduce using rule 30 (char_init)
 
 
 State 46
 
-   27 variable_type: STRING •
+   13 variable_initialization: CHAR char_init • next_char
 
-    $default  reduce using rule 27 (variable_type)
+    COMMA  shift, and go to state 71
+
+    $default  reduce using rule 20 (next_char)
+
+    next_char  go to state 72
 
 
 State 47
 
-   34 parameters: variable_type • VAR_NAME arguments_end
+   28 doulbe_init: VAR_NAME •
+   29            | VAR_NAME • EQUAL_SIGN DOUBLE_VALUE
 
-    VAR_NAME  shift, and go to state 56
+    EQUAL_SIGN  shift, and go to state 73
+
+    $default  reduce using rule 28 (doulbe_init)
 
 
 State 48
 
-   30 functions: visibility VOID VAR_NAME BRACKET_LEFT arguments • BRACKET_RIGHT CURLY_BRACKET_LEFT inside_void_function CURLY_BRACKET_RIGHT
+   12 variable_initialization: DOUBLE doulbe_init • next_double
 
-    BRACKET_RIGHT  shift, and go to state 57
+    COMMA  shift, and go to state 74
+
+    $default  reduce using rule 18 (next_double)
+
+    next_double  go to state 75
 
 
 State 49
 
-   33 arguments: parameters •
+   32 bool_init: VAR_NAME •
+   33          | VAR_NAME • EQUAL_SIGN BOOLEAN_VALUE
 
-    $default  reduce using rule 33 (arguments)
+    EQUAL_SIGN  shift, and go to state 76
+
+    $default  reduce using rule 32 (bool_init)
 
 
 State 50
 
-   10 variable_assignment: INT VAR_NAME EQUAL_SIGN INT_VALUE •
+   14 variable_initialization: BOOLEAN bool_init • next_bool
 
-    $default  reduce using rule 10 (variable_assignment)
+    COMMA  shift, and go to state 77
+
+    $default  reduce using rule 22 (next_bool)
+
+    next_bool  go to state 78
 
 
 State 51
 
-   12 variable_assignment: CHAR VAR_NAME EQUAL_SIGN CHAR_VALUE •
+   34 string_init: VAR_NAME •
+   35            | VAR_NAME • EQUAL_SIGN STRING_VALUE
 
-    $default  reduce using rule 12 (variable_assignment)
+    EQUAL_SIGN  shift, and go to state 79
+
+    $default  reduce using rule 34 (string_init)
 
 
 State 52
 
-   11 variable_assignment: DOUBLE VAR_NAME EQUAL_SIGN DOUBLE_VALUE •
+   15 variable_initialization: STRING string_init • next_string
 
-    $default  reduce using rule 11 (variable_assignment)
+    COMMA  shift, and go to state 80
+
+    $default  reduce using rule 24 (next_string)
+
+    next_string  go to state 81
 
 
 State 53
 
-   13 variable_assignment: BOOLEAN VAR_NAME EQUAL_SIGN BOOLEAN_VALUE •
+    8 class_members: visibility variable_initialization SEMICOLON •
 
-    $default  reduce using rule 13 (variable_assignment)
+    $default  reduce using rule 8 (class_members)
 
 
 State 54
 
-   14 variable_assignment: STRING VAR_NAME EQUAL_SIGN STRING_VALUE •
+   64 functions: function_visibility VOID VAR_NAME • BRACKET_LEFT arguments BRACKET_RIGHT CURLY_BRACKET_LEFT inside_void_function CURLY_BRACKET_RIGHT
 
-    $default  reduce using rule 14 (variable_assignment)
+    BRACKET_LEFT  shift, and go to state 82
 
 
 State 55
 
-   31 functions: visibility variable_type VAR_NAME BRACKET_LEFT arguments • BRACKET_RIGHT CURLY_BRACKET_LEFT inside_function CURLY_BRACKET_RIGHT
-
-    BRACKET_RIGHT  shift, and go to state 58
-
-
-State 56
-
-   34 parameters: variable_type VAR_NAME • arguments_end
-
-    COMMA  shift, and go to state 59
-
-    $default  reduce using rule 35 (arguments_end)
-
-    arguments_end  go to state 60
-
-
-State 57
-
-   30 functions: visibility VOID VAR_NAME BRACKET_LEFT arguments BRACKET_RIGHT • CURLY_BRACKET_LEFT inside_void_function CURLY_BRACKET_RIGHT
-
-    CURLY_BRACKET_LEFT  shift, and go to state 61
-
-
-State 58
-
-   31 functions: visibility variable_type VAR_NAME BRACKET_LEFT arguments BRACKET_RIGHT • CURLY_BRACKET_LEFT inside_function CURLY_BRACKET_RIGHT
-
-    CURLY_BRACKET_LEFT  shift, and go to state 62
-
-
-State 59
-
-   36 arguments_end: COMMA • parameters
-
-    INT      shift, and go to state 42
-    CHAR     shift, and go to state 43
-    DOUBLE   shift, and go to state 44
-    BOOLEAN  shift, and go to state 45
-    STRING   shift, and go to state 46
-
-    variable_type  go to state 47
-    parameters     go to state 63
-
-
-State 60
-
-   34 parameters: variable_type VAR_NAME arguments_end •
-
-    $default  reduce using rule 34 (parameters)
-
-
-State 61
-
-   30 functions: visibility VOID VAR_NAME BRACKET_LEFT arguments BRACKET_RIGHT CURLY_BRACKET_LEFT • inside_void_function CURLY_BRACKET_RIGHT
-
-    CLASS_NAME  shift, and go to state 64
-    FOR         shift, and go to state 65
-    DO          shift, and go to state 66
-    SWITCH      shift, and go to state 67
-    VAR_NAME    shift, and go to state 68
-    INT         shift, and go to state 17
-    CHAR        shift, and go to state 18
-    DOUBLE      shift, and go to state 19
-    BOOLEAN     shift, and go to state 20
-    STRING      shift, and go to state 21
-
-    $default  reduce using rule 41 (inside_brackets)
-
-    variable_initialization  go to state 69
-    variable_assignment      go to state 70
-    variable_type            go to state 71
-    class_instance           go to state 72
-    member_access            go to state 73
-    inside_void_function     go to state 74
-    inside_brackets          go to state 75
-    loops_n_condition        go to state 76
-    for_statement            go to state 77
-    do_while                 go to state 78
-    switch                   go to state 79
-
-
-State 62
-
-   31 functions: visibility variable_type VAR_NAME BRACKET_LEFT arguments BRACKET_RIGHT CURLY_BRACKET_LEFT • inside_function CURLY_BRACKET_RIGHT
-
-    CLASS_NAME  shift, and go to state 64
-    FOR         shift, and go to state 65
-    DO          shift, and go to state 66
-    SWITCH      shift, and go to state 67
-    VAR_NAME    shift, and go to state 68
-    INT         shift, and go to state 17
-    CHAR        shift, and go to state 18
-    DOUBLE      shift, and go to state 19
-    BOOLEAN     shift, and go to state 20
-    STRING      shift, and go to state 21
-
-    $default  reduce using rule 41 (inside_brackets)
-
-    variable_initialization  go to state 69
-    variable_assignment      go to state 70
-    variable_type            go to state 71
-    class_instance           go to state 72
-    member_access            go to state 73
-    inside_function          go to state 80
-    inside_brackets          go to state 81
-    loops_n_condition        go to state 76
-    for_statement            go to state 77
-    do_while                 go to state 78
-    switch                   go to state 79
-
-
-State 63
-
-   36 arguments_end: COMMA parameters •
-
-    $default  reduce using rule 36 (arguments_end)
-
-
-State 64
-
-   28 class_instance: CLASS_NAME • VAR_NAME EQUAL_SIGN NEW CLASS_NAME BRACKET_LEFT BRACKET_RIGHT
-
-    VAR_NAME  shift, and go to state 82
-
-
-State 65
-
-   50 for_statement: FOR • BRACKET_LEFT for_condition BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT
+   65 functions: function_visibility variable_type VAR_NAME • BRACKET_LEFT arguments BRACKET_RIGHT CURLY_BRACKET_LEFT inside_function CURLY_BRACKET_RIGHT
 
     BRACKET_LEFT  shift, and go to state 83
 
 
+State 56
+
+   40 expression: BRACKET_LEFT • expression BRACKET_RIGHT
+   44 term: BRACKET_LEFT • term BRACKET_RIGHT
+   48 id: BRACKET_LEFT • id BRACKET_RIGHT
+
+    BRACKET_LEFT   shift, and go to state 56
+    VAR_NAME       shift, and go to state 57
+    INT_VALUE      shift, and go to state 58
+    CHAR_VALUE     shift, and go to state 59
+    DOUBLE_VALUE   shift, and go to state 60
+    BOOLEAN_VALUE  shift, and go to state 61
+    STRING_VALUE   shift, and go to state 62
+
+    expression      go to state 84
+    term            go to state 85
+    id              go to state 86
+    variable_value  go to state 66
+
+
+State 57
+
+   47 id: VAR_NAME •
+
+    $default  reduce using rule 47 (id)
+
+
+State 58
+
+   52 variable_value: INT_VALUE •
+
+    $default  reduce using rule 52 (variable_value)
+
+
+State 59
+
+   53 variable_value: CHAR_VALUE •
+
+    $default  reduce using rule 53 (variable_value)
+
+
+State 60
+
+   54 variable_value: DOUBLE_VALUE •
+
+    $default  reduce using rule 54 (variable_value)
+
+
+State 61
+
+   55 variable_value: BOOLEAN_VALUE •
+
+    $default  reduce using rule 55 (variable_value)
+
+
+State 62
+
+   56 variable_value: STRING_VALUE •
+
+    $default  reduce using rule 56 (variable_value)
+
+
+State 63
+
+   37 variable_assignment: VAR_NAME $@1 EQUAL_SIGN expression •
+   38 expression: expression • PLUS term
+   39           | expression • MINUS term
+
+    PLUS   shift, and go to state 87
+    MINUS  shift, and go to state 88
+
+    $default  reduce using rule 37 (variable_assignment)
+
+
+State 64
+
+   41 expression: term •
+   42 term: term • MULTIPLY id
+   43     | term • DIVIDE id
+
+    MULTIPLY  shift, and go to state 89
+    DIVIDE    shift, and go to state 90
+
+    $default  reduce using rule 41 (expression)
+
+
+State 65
+
+   45 term: id •
+
+    $default  reduce using rule 45 (term)
+
+
 State 66
 
-   69 do_while: DO • CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT WHILE BRACKET_LEFT do_condition BRACKET_RIGHT SEMICOLON
+   46 id: variable_value •
 
-    CURLY_BRACKET_LEFT  shift, and go to state 84
+    $default  reduce using rule 46 (id)
 
 
 State 67
 
-   78 switch: SWITCH • BRACKET_LEFT VAR_NAME BRACKET_RIGHT CURLY_BRACKET_LEFT case default CURLY_BRACKET_RIGHT
+   27 int_init: VAR_NAME EQUAL_SIGN • INT_VALUE
 
-    BRACKET_LEFT  shift, and go to state 85
+    INT_VALUE  shift, and go to state 91
 
 
 State 68
 
-   29 member_access: VAR_NAME • DOT VAR_NAME
+   17 next_int: COMMA • int_init next_int
 
-    DOT  shift, and go to state 86
+    VAR_NAME  shift, and go to state 43
+
+    int_init  go to state 92
 
 
 State 69
 
-   46 loops_n_condition: variable_initialization • SEMICOLON
+   11 variable_initialization: INT int_init next_int •
 
-    SEMICOLON  shift, and go to state 87
+    $default  reduce using rule 11 (variable_initialization)
 
 
 State 70
 
-   47 loops_n_condition: variable_assignment • SEMICOLON
+   31 char_init: VAR_NAME EQUAL_SIGN • CHAR_VALUE
 
-    SEMICOLON  shift, and go to state 88
+    CHAR_VALUE  shift, and go to state 93
 
 
 State 71
 
-    9 variable_initialization: variable_type • VAR_NAME
+   21 next_char: COMMA • char_init next_char
 
-    VAR_NAME  shift, and go to state 89
+    VAR_NAME  shift, and go to state 45
+
+    char_init  go to state 94
 
 
 State 72
 
-   48 loops_n_condition: class_instance • SEMICOLON
+   13 variable_initialization: CHAR char_init next_char •
 
-    SEMICOLON  shift, and go to state 90
+    $default  reduce using rule 13 (variable_initialization)
 
 
 State 73
 
-   49 loops_n_condition: member_access • SEMICOLON
+   29 doulbe_init: VAR_NAME EQUAL_SIGN • DOUBLE_VALUE
 
-    SEMICOLON  shift, and go to state 91
+    DOUBLE_VALUE  shift, and go to state 95
 
 
 State 74
 
-   30 functions: visibility VOID VAR_NAME BRACKET_LEFT arguments BRACKET_RIGHT CURLY_BRACKET_LEFT inside_void_function • CURLY_BRACKET_RIGHT
+   19 next_double: COMMA • doulbe_init next_double
 
-    CURLY_BRACKET_RIGHT  shift, and go to state 92
+    VAR_NAME  shift, and go to state 47
+
+    doulbe_init  go to state 96
 
 
 State 75
 
-   37 inside_void_function: inside_brackets •
-   38                     | inside_brackets • RETURN SEMICOLON
+   12 variable_initialization: DOUBLE doulbe_init next_double •
 
-    RETURN  shift, and go to state 93
-
-    $default  reduce using rule 37 (inside_void_function)
+    $default  reduce using rule 12 (variable_initialization)
 
 
 State 76
 
-   42 inside_brackets: loops_n_condition • inside_brackets
+   33 bool_init: VAR_NAME EQUAL_SIGN • BOOLEAN_VALUE
 
-    CLASS_NAME  shift, and go to state 64
-    FOR         shift, and go to state 65
-    DO          shift, and go to state 66
-    SWITCH      shift, and go to state 67
-    VAR_NAME    shift, and go to state 68
-    INT         shift, and go to state 17
-    CHAR        shift, and go to state 18
-    DOUBLE      shift, and go to state 19
-    BOOLEAN     shift, and go to state 20
-    STRING      shift, and go to state 21
-
-    $default  reduce using rule 41 (inside_brackets)
-
-    variable_initialization  go to state 69
-    variable_assignment      go to state 70
-    variable_type            go to state 71
-    class_instance           go to state 72
-    member_access            go to state 73
-    inside_brackets          go to state 94
-    loops_n_condition        go to state 76
-    for_statement            go to state 77
-    do_while                 go to state 78
-    switch                   go to state 79
+    BOOLEAN_VALUE  shift, and go to state 97
 
 
 State 77
 
-   43 loops_n_condition: for_statement •
+   23 next_bool: COMMA • bool_init next_bool
 
-    $default  reduce using rule 43 (loops_n_condition)
+    VAR_NAME  shift, and go to state 49
+
+    bool_init  go to state 98
 
 
 State 78
 
-   45 loops_n_condition: do_while •
+   14 variable_initialization: BOOLEAN bool_init next_bool •
 
-    $default  reduce using rule 45 (loops_n_condition)
+    $default  reduce using rule 14 (variable_initialization)
 
 
 State 79
 
-   44 loops_n_condition: switch •
+   35 string_init: VAR_NAME EQUAL_SIGN • STRING_VALUE
 
-    $default  reduce using rule 44 (loops_n_condition)
+    STRING_VALUE  shift, and go to state 99
 
 
 State 80
 
-   31 functions: visibility variable_type VAR_NAME BRACKET_LEFT arguments BRACKET_RIGHT CURLY_BRACKET_LEFT inside_function • CURLY_BRACKET_RIGHT
+   25 next_string: COMMA • string_init next_string
 
-    CURLY_BRACKET_RIGHT  shift, and go to state 95
+    VAR_NAME  shift, and go to state 51
+
+    string_init  go to state 100
 
 
 State 81
 
-   39 inside_function: inside_brackets • RETURN VAR_NAME SEMICOLON
-   40                | inside_brackets • RETURN variable_value SEMICOLON
+   15 variable_initialization: STRING string_init next_string •
 
-    RETURN  shift, and go to state 96
+    $default  reduce using rule 15 (variable_initialization)
 
 
 State 82
 
-   28 class_instance: CLASS_NAME VAR_NAME • EQUAL_SIGN NEW CLASS_NAME BRACKET_LEFT BRACKET_RIGHT
+   64 functions: function_visibility VOID VAR_NAME BRACKET_LEFT • arguments BRACKET_RIGHT CURLY_BRACKET_LEFT inside_void_function CURLY_BRACKET_RIGHT
 
-    EQUAL_SIGN  shift, and go to state 97
+    INT      shift, and go to state 35
+    CHAR     shift, and go to state 36
+    DOUBLE   shift, and go to state 37
+    BOOLEAN  shift, and go to state 38
+    STRING   shift, and go to state 39
+
+    $default  reduce using rule 68 (arguments)
+
+    variable_type  go to state 101
+    arguments      go to state 102
+    parameters     go to state 103
 
 
 State 83
 
-   50 for_statement: FOR BRACKET_LEFT • for_condition BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT
+   65 functions: function_visibility variable_type VAR_NAME BRACKET_LEFT • arguments BRACKET_RIGHT CURLY_BRACKET_LEFT inside_function CURLY_BRACKET_RIGHT
 
-    INT      shift, and go to state 98
-    CHAR     shift, and go to state 99
-    DOUBLE   shift, and go to state 100
-    BOOLEAN  shift, and go to state 101
-    STRING   shift, and go to state 102
+    INT      shift, and go to state 35
+    CHAR     shift, and go to state 36
+    DOUBLE   shift, and go to state 37
+    BOOLEAN  shift, and go to state 38
+    STRING   shift, and go to state 39
 
-    $default  reduce using rule 52 (for_variable)
+    $default  reduce using rule 68 (arguments)
 
-    variable_assignment  go to state 103
-    for_condition        go to state 104
-    for_variable         go to state 105
+    variable_type  go to state 101
+    arguments      go to state 104
+    parameters     go to state 103
 
 
 State 84
 
-   69 do_while: DO CURLY_BRACKET_LEFT • inside_brackets CURLY_BRACKET_RIGHT WHILE BRACKET_LEFT do_condition BRACKET_RIGHT SEMICOLON
+   38 expression: expression • PLUS term
+   39           | expression • MINUS term
+   40           | BRACKET_LEFT expression • BRACKET_RIGHT
 
-    CLASS_NAME  shift, and go to state 64
-    FOR         shift, and go to state 65
-    DO          shift, and go to state 66
-    SWITCH      shift, and go to state 67
-    VAR_NAME    shift, and go to state 68
-    INT         shift, and go to state 17
-    CHAR        shift, and go to state 18
-    DOUBLE      shift, and go to state 19
-    BOOLEAN     shift, and go to state 20
-    STRING      shift, and go to state 21
-
-    $default  reduce using rule 41 (inside_brackets)
-
-    variable_initialization  go to state 69
-    variable_assignment      go to state 70
-    variable_type            go to state 71
-    class_instance           go to state 72
-    member_access            go to state 73
-    inside_brackets          go to state 106
-    loops_n_condition        go to state 76
-    for_statement            go to state 77
-    do_while                 go to state 78
-    switch                   go to state 79
+    BRACKET_RIGHT  shift, and go to state 105
+    PLUS           shift, and go to state 87
+    MINUS          shift, and go to state 88
 
 
 State 85
 
-   78 switch: SWITCH BRACKET_LEFT • VAR_NAME BRACKET_RIGHT CURLY_BRACKET_LEFT case default CURLY_BRACKET_RIGHT
+   41 expression: term •
+   42 term: term • MULTIPLY id
+   43     | term • DIVIDE id
+   44     | BRACKET_LEFT term • BRACKET_RIGHT
 
-    VAR_NAME  shift, and go to state 107
+    BRACKET_RIGHT  shift, and go to state 106
+    MULTIPLY       shift, and go to state 89
+    DIVIDE         shift, and go to state 90
+
+    BRACKET_RIGHT  [reduce using rule 41 (expression)]
+    $default       reduce using rule 41 (expression)
 
 
 State 86
 
-   29 member_access: VAR_NAME DOT • VAR_NAME
+   45 term: id •
+   48 id: BRACKET_LEFT id • BRACKET_RIGHT
 
-    VAR_NAME  shift, and go to state 108
+    BRACKET_RIGHT  shift, and go to state 107
+
+    BRACKET_RIGHT  [reduce using rule 45 (term)]
+    $default       reduce using rule 45 (term)
 
 
 State 87
 
-   46 loops_n_condition: variable_initialization SEMICOLON •
+   38 expression: expression PLUS • term
 
-    $default  reduce using rule 46 (loops_n_condition)
+    BRACKET_LEFT   shift, and go to state 108
+    VAR_NAME       shift, and go to state 57
+    INT_VALUE      shift, and go to state 58
+    CHAR_VALUE     shift, and go to state 59
+    DOUBLE_VALUE   shift, and go to state 60
+    BOOLEAN_VALUE  shift, and go to state 61
+    STRING_VALUE   shift, and go to state 62
+
+    term            go to state 109
+    id              go to state 65
+    variable_value  go to state 66
 
 
 State 88
 
-   47 loops_n_condition: variable_assignment SEMICOLON •
+   39 expression: expression MINUS • term
 
-    $default  reduce using rule 47 (loops_n_condition)
+    BRACKET_LEFT   shift, and go to state 108
+    VAR_NAME       shift, and go to state 57
+    INT_VALUE      shift, and go to state 58
+    CHAR_VALUE     shift, and go to state 59
+    DOUBLE_VALUE   shift, and go to state 60
+    BOOLEAN_VALUE  shift, and go to state 61
+    STRING_VALUE   shift, and go to state 62
+
+    term            go to state 110
+    id              go to state 65
+    variable_value  go to state 66
 
 
 State 89
 
-    9 variable_initialization: variable_type VAR_NAME •
+   42 term: term MULTIPLY • id
 
-    $default  reduce using rule 9 (variable_initialization)
+    BRACKET_LEFT   shift, and go to state 111
+    VAR_NAME       shift, and go to state 57
+    INT_VALUE      shift, and go to state 58
+    CHAR_VALUE     shift, and go to state 59
+    DOUBLE_VALUE   shift, and go to state 60
+    BOOLEAN_VALUE  shift, and go to state 61
+    STRING_VALUE   shift, and go to state 62
+
+    id              go to state 112
+    variable_value  go to state 66
 
 
 State 90
 
-   48 loops_n_condition: class_instance SEMICOLON •
+   43 term: term DIVIDE • id
 
-    $default  reduce using rule 48 (loops_n_condition)
+    BRACKET_LEFT   shift, and go to state 111
+    VAR_NAME       shift, and go to state 57
+    INT_VALUE      shift, and go to state 58
+    CHAR_VALUE     shift, and go to state 59
+    DOUBLE_VALUE   shift, and go to state 60
+    BOOLEAN_VALUE  shift, and go to state 61
+    STRING_VALUE   shift, and go to state 62
+
+    id              go to state 113
+    variable_value  go to state 66
 
 
 State 91
 
-   49 loops_n_condition: member_access SEMICOLON •
+   27 int_init: VAR_NAME EQUAL_SIGN INT_VALUE •
 
-    $default  reduce using rule 49 (loops_n_condition)
+    $default  reduce using rule 27 (int_init)
 
 
 State 92
 
-   30 functions: visibility VOID VAR_NAME BRACKET_LEFT arguments BRACKET_RIGHT CURLY_BRACKET_LEFT inside_void_function CURLY_BRACKET_RIGHT •
+   17 next_int: COMMA int_init • next_int
 
-    $default  reduce using rule 30 (functions)
+    COMMA  shift, and go to state 68
+
+    $default  reduce using rule 16 (next_int)
+
+    next_int  go to state 114
 
 
 State 93
 
-   38 inside_void_function: inside_brackets RETURN • SEMICOLON
+   31 char_init: VAR_NAME EQUAL_SIGN CHAR_VALUE •
 
-    SEMICOLON  shift, and go to state 109
+    $default  reduce using rule 31 (char_init)
 
 
 State 94
 
-   42 inside_brackets: loops_n_condition inside_brackets •
+   21 next_char: COMMA char_init • next_char
 
-    $default  reduce using rule 42 (inside_brackets)
+    COMMA  shift, and go to state 71
+
+    $default  reduce using rule 20 (next_char)
+
+    next_char  go to state 115
 
 
 State 95
 
-   31 functions: visibility variable_type VAR_NAME BRACKET_LEFT arguments BRACKET_RIGHT CURLY_BRACKET_LEFT inside_function CURLY_BRACKET_RIGHT •
+   29 doulbe_init: VAR_NAME EQUAL_SIGN DOUBLE_VALUE •
 
-    $default  reduce using rule 31 (functions)
+    $default  reduce using rule 29 (doulbe_init)
 
 
 State 96
 
-   39 inside_function: inside_brackets RETURN • VAR_NAME SEMICOLON
-   40                | inside_brackets RETURN • variable_value SEMICOLON
+   19 next_double: COMMA doulbe_init • next_double
 
-    VAR_NAME       shift, and go to state 110
-    INT_VALUE      shift, and go to state 111
-    CHAR_VALUE     shift, and go to state 112
-    DOUBLE_VALUE   shift, and go to state 113
-    BOOLEAN_VALUE  shift, and go to state 114
-    STRING_VALUE   shift, and go to state 115
+    COMMA  shift, and go to state 74
 
-    variable_value  go to state 116
+    $default  reduce using rule 18 (next_double)
+
+    next_double  go to state 116
 
 
 State 97
 
-   28 class_instance: CLASS_NAME VAR_NAME EQUAL_SIGN • NEW CLASS_NAME BRACKET_LEFT BRACKET_RIGHT
+   33 bool_init: VAR_NAME EQUAL_SIGN BOOLEAN_VALUE •
 
-    NEW  shift, and go to state 117
+    $default  reduce using rule 33 (bool_init)
 
 
 State 98
 
-   10 variable_assignment: INT • VAR_NAME EQUAL_SIGN INT_VALUE
+   23 next_bool: COMMA bool_init • next_bool
 
-    VAR_NAME  shift, and go to state 27
+    COMMA  shift, and go to state 77
+
+    $default  reduce using rule 22 (next_bool)
+
+    next_bool  go to state 117
 
 
 State 99
 
-   12 variable_assignment: CHAR • VAR_NAME EQUAL_SIGN CHAR_VALUE
+   35 string_init: VAR_NAME EQUAL_SIGN STRING_VALUE •
 
-    VAR_NAME  shift, and go to state 28
+    $default  reduce using rule 35 (string_init)
 
 
 State 100
 
-   11 variable_assignment: DOUBLE • VAR_NAME EQUAL_SIGN DOUBLE_VALUE
+   25 next_string: COMMA string_init • next_string
 
-    VAR_NAME  shift, and go to state 29
+    COMMA  shift, and go to state 80
+
+    $default  reduce using rule 24 (next_string)
+
+    next_string  go to state 118
 
 
 State 101
 
-   13 variable_assignment: BOOLEAN • VAR_NAME EQUAL_SIGN BOOLEAN_VALUE
+   70 parameters: variable_type • VAR_NAME arguments_end
 
-    VAR_NAME  shift, and go to state 30
+    VAR_NAME  shift, and go to state 119
 
 
 State 102
 
-   14 variable_assignment: STRING • VAR_NAME EQUAL_SIGN STRING_VALUE
+   64 functions: function_visibility VOID VAR_NAME BRACKET_LEFT arguments • BRACKET_RIGHT CURLY_BRACKET_LEFT inside_void_function CURLY_BRACKET_RIGHT
 
-    VAR_NAME  shift, and go to state 31
+    BRACKET_RIGHT  shift, and go to state 120
 
 
 State 103
 
-   53 for_variable: variable_assignment •
+   69 arguments: parameters •
 
-    $default  reduce using rule 53 (for_variable)
+    $default  reduce using rule 69 (arguments)
 
 
 State 104
 
-   50 for_statement: FOR BRACKET_LEFT for_condition • BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT
-
-    BRACKET_RIGHT  shift, and go to state 118
-
-
-State 105
-
-   51 for_condition: for_variable • SEMICOLON for_comparison SEMICOLON for_step
-
-    SEMICOLON  shift, and go to state 119
-
-
-State 106
-
-   69 do_while: DO CURLY_BRACKET_LEFT inside_brackets • CURLY_BRACKET_RIGHT WHILE BRACKET_LEFT do_condition BRACKET_RIGHT SEMICOLON
-
-    CURLY_BRACKET_RIGHT  shift, and go to state 120
-
-
-State 107
-
-   78 switch: SWITCH BRACKET_LEFT VAR_NAME • BRACKET_RIGHT CURLY_BRACKET_LEFT case default CURLY_BRACKET_RIGHT
+   65 functions: function_visibility variable_type VAR_NAME BRACKET_LEFT arguments • BRACKET_RIGHT CURLY_BRACKET_LEFT inside_function CURLY_BRACKET_RIGHT
 
     BRACKET_RIGHT  shift, and go to state 121
 
 
+State 105
+
+   40 expression: BRACKET_LEFT expression BRACKET_RIGHT •
+
+    $default  reduce using rule 40 (expression)
+
+
+State 106
+
+   44 term: BRACKET_LEFT term BRACKET_RIGHT •
+
+    $default  reduce using rule 44 (term)
+
+
+State 107
+
+   48 id: BRACKET_LEFT id BRACKET_RIGHT •
+
+    $default  reduce using rule 48 (id)
+
+
 State 108
 
-   29 member_access: VAR_NAME DOT VAR_NAME •
+   44 term: BRACKET_LEFT • term BRACKET_RIGHT
+   48 id: BRACKET_LEFT • id BRACKET_RIGHT
 
-    $default  reduce using rule 29 (member_access)
+    BRACKET_LEFT   shift, and go to state 108
+    VAR_NAME       shift, and go to state 57
+    INT_VALUE      shift, and go to state 58
+    CHAR_VALUE     shift, and go to state 59
+    DOUBLE_VALUE   shift, and go to state 60
+    BOOLEAN_VALUE  shift, and go to state 61
+    STRING_VALUE   shift, and go to state 62
+
+    term            go to state 122
+    id              go to state 86
+    variable_value  go to state 66
 
 
 State 109
 
-   38 inside_void_function: inside_brackets RETURN SEMICOLON •
+   38 expression: expression PLUS term •
+   42 term: term • MULTIPLY id
+   43     | term • DIVIDE id
 
-    $default  reduce using rule 38 (inside_void_function)
+    MULTIPLY  shift, and go to state 89
+    DIVIDE    shift, and go to state 90
+
+    $default  reduce using rule 38 (expression)
 
 
 State 110
 
-   39 inside_function: inside_brackets RETURN VAR_NAME • SEMICOLON
+   39 expression: expression MINUS term •
+   42 term: term • MULTIPLY id
+   43     | term • DIVIDE id
 
-    SEMICOLON  shift, and go to state 122
+    MULTIPLY  shift, and go to state 89
+    DIVIDE    shift, and go to state 90
+
+    $default  reduce using rule 39 (expression)
 
 
 State 111
 
-   18 variable_value: INT_VALUE •
+   48 id: BRACKET_LEFT • id BRACKET_RIGHT
 
-    $default  reduce using rule 18 (variable_value)
+    BRACKET_LEFT   shift, and go to state 111
+    VAR_NAME       shift, and go to state 57
+    INT_VALUE      shift, and go to state 58
+    CHAR_VALUE     shift, and go to state 59
+    DOUBLE_VALUE   shift, and go to state 60
+    BOOLEAN_VALUE  shift, and go to state 61
+    STRING_VALUE   shift, and go to state 62
+
+    id              go to state 123
+    variable_value  go to state 66
 
 
 State 112
 
-   19 variable_value: CHAR_VALUE •
+   42 term: term MULTIPLY id •
 
-    $default  reduce using rule 19 (variable_value)
+    $default  reduce using rule 42 (term)
 
 
 State 113
 
-   20 variable_value: DOUBLE_VALUE •
+   43 term: term DIVIDE id •
 
-    $default  reduce using rule 20 (variable_value)
+    $default  reduce using rule 43 (term)
 
 
 State 114
 
-   21 variable_value: BOOLEAN_VALUE •
+   17 next_int: COMMA int_init next_int •
 
-    $default  reduce using rule 21 (variable_value)
+    $default  reduce using rule 17 (next_int)
 
 
 State 115
 
-   22 variable_value: STRING_VALUE •
+   21 next_char: COMMA char_init next_char •
 
-    $default  reduce using rule 22 (variable_value)
+    $default  reduce using rule 21 (next_char)
 
 
 State 116
 
-   40 inside_function: inside_brackets RETURN variable_value • SEMICOLON
+   19 next_double: COMMA doulbe_init next_double •
 
-    SEMICOLON  shift, and go to state 123
+    $default  reduce using rule 19 (next_double)
 
 
 State 117
 
-   28 class_instance: CLASS_NAME VAR_NAME EQUAL_SIGN NEW • CLASS_NAME BRACKET_LEFT BRACKET_RIGHT
+   23 next_bool: COMMA bool_init next_bool •
 
-    CLASS_NAME  shift, and go to state 124
+    $default  reduce using rule 23 (next_bool)
 
 
 State 118
 
-   50 for_statement: FOR BRACKET_LEFT for_condition BRACKET_RIGHT • CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT
+   25 next_string: COMMA string_init next_string •
 
-    CURLY_BRACKET_LEFT  shift, and go to state 125
+    $default  reduce using rule 25 (next_string)
 
 
 State 119
 
-   51 for_condition: for_variable SEMICOLON • for_comparison SEMICOLON for_step
+   70 parameters: variable_type VAR_NAME • arguments_end
 
-    VAR_NAME  shift, and go to state 126
+    COMMA  shift, and go to state 124
 
-    $default  reduce using rule 54 (for_comparison)
+    $default  reduce using rule 71 (arguments_end)
 
-    for_comparison  go to state 127
+    arguments_end  go to state 125
 
 
 State 120
 
-   69 do_while: DO CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT • WHILE BRACKET_LEFT do_condition BRACKET_RIGHT SEMICOLON
+   64 functions: function_visibility VOID VAR_NAME BRACKET_LEFT arguments BRACKET_RIGHT • CURLY_BRACKET_LEFT inside_void_function CURLY_BRACKET_RIGHT
 
-    WHILE  shift, and go to state 128
+    CURLY_BRACKET_LEFT  shift, and go to state 126
 
 
 State 121
 
-   78 switch: SWITCH BRACKET_LEFT VAR_NAME BRACKET_RIGHT • CURLY_BRACKET_LEFT case default CURLY_BRACKET_RIGHT
+   65 functions: function_visibility variable_type VAR_NAME BRACKET_LEFT arguments BRACKET_RIGHT • CURLY_BRACKET_LEFT inside_function CURLY_BRACKET_RIGHT
 
-    CURLY_BRACKET_LEFT  shift, and go to state 129
+    CURLY_BRACKET_LEFT  shift, and go to state 127
 
 
 State 122
 
-   39 inside_function: inside_brackets RETURN VAR_NAME SEMICOLON •
+   42 term: term • MULTIPLY id
+   43     | term • DIVIDE id
+   44     | BRACKET_LEFT term • BRACKET_RIGHT
 
-    $default  reduce using rule 39 (inside_function)
+    BRACKET_RIGHT  shift, and go to state 106
+    MULTIPLY       shift, and go to state 89
+    DIVIDE         shift, and go to state 90
 
 
 State 123
 
-   40 inside_function: inside_brackets RETURN variable_value SEMICOLON •
+   48 id: BRACKET_LEFT id • BRACKET_RIGHT
 
-    $default  reduce using rule 40 (inside_function)
+    BRACKET_RIGHT  shift, and go to state 107
 
 
 State 124
 
-   28 class_instance: CLASS_NAME VAR_NAME EQUAL_SIGN NEW CLASS_NAME • BRACKET_LEFT BRACKET_RIGHT
+   72 arguments_end: COMMA • parameters
 
-    BRACKET_LEFT  shift, and go to state 130
+    INT      shift, and go to state 35
+    CHAR     shift, and go to state 36
+    DOUBLE   shift, and go to state 37
+    BOOLEAN  shift, and go to state 38
+    STRING   shift, and go to state 39
+
+    variable_type  go to state 101
+    parameters     go to state 128
 
 
 State 125
 
-   50 for_statement: FOR BRACKET_LEFT for_condition BRACKET_RIGHT CURLY_BRACKET_LEFT • inside_brackets CURLY_BRACKET_RIGHT
+   70 parameters: variable_type VAR_NAME arguments_end •
 
-    CLASS_NAME  shift, and go to state 64
-    FOR         shift, and go to state 65
-    DO          shift, and go to state 66
-    SWITCH      shift, and go to state 67
-    VAR_NAME    shift, and go to state 68
-    INT         shift, and go to state 17
-    CHAR        shift, and go to state 18
-    DOUBLE      shift, and go to state 19
-    BOOLEAN     shift, and go to state 20
-    STRING      shift, and go to state 21
-
-    $default  reduce using rule 41 (inside_brackets)
-
-    variable_initialization  go to state 69
-    variable_assignment      go to state 70
-    variable_type            go to state 71
-    class_instance           go to state 72
-    member_access            go to state 73
-    inside_brackets          go to state 131
-    loops_n_condition        go to state 76
-    for_statement            go to state 77
-    do_while                 go to state 78
-    switch                   go to state 79
+    $default  reduce using rule 70 (parameters)
 
 
 State 126
 
-   55 for_comparison: VAR_NAME • CONDITION_SYMBOL comparison_value bool_operator
+   64 functions: function_visibility VOID VAR_NAME BRACKET_LEFT arguments BRACKET_RIGHT CURLY_BRACKET_LEFT • inside_void_function CURLY_BRACKET_RIGHT
 
-    CONDITION_SYMBOL  shift, and go to state 132
+    CLASS_NAME  shift, and go to state 129
+    IF          shift, and go to state 130
+    FOR         shift, and go to state 131
+    DO          shift, and go to state 132
+    SWITCH      shift, and go to state 133
+    VAR_NAME    shift, and go to state 11
+    INT         shift, and go to state 26
+    CHAR        shift, and go to state 27
+    DOUBLE      shift, and go to state 28
+    BOOLEAN     shift, and go to state 29
+    STRING      shift, and go to state 30
+
+    $default  reduce using rule 77 (inside_brackets)
+
+    variable_initialization  go to state 134
+    variable_assignment      go to state 135
+    class_instance           go to state 136
+    member_access            go to state 137
+    inside_void_function     go to state 138
+    inside_brackets          go to state 139
+    loops_n_condition        go to state 140
+    for_statement            go to state 141
+    do_while                 go to state 142
+    switch                   go to state 143
+    if                       go to state 144
 
 
 State 127
 
-   51 for_condition: for_variable SEMICOLON for_comparison • SEMICOLON for_step
+   65 functions: function_visibility variable_type VAR_NAME BRACKET_LEFT arguments BRACKET_RIGHT CURLY_BRACKET_LEFT • inside_function CURLY_BRACKET_RIGHT
 
-    SEMICOLON  shift, and go to state 133
+    CLASS_NAME  shift, and go to state 129
+    IF          shift, and go to state 130
+    FOR         shift, and go to state 131
+    DO          shift, and go to state 132
+    SWITCH      shift, and go to state 133
+    VAR_NAME    shift, and go to state 11
+    INT         shift, and go to state 26
+    CHAR        shift, and go to state 27
+    DOUBLE      shift, and go to state 28
+    BOOLEAN     shift, and go to state 29
+    STRING      shift, and go to state 30
+
+    $default  reduce using rule 77 (inside_brackets)
+
+    variable_initialization  go to state 134
+    variable_assignment      go to state 135
+    class_instance           go to state 136
+    member_access            go to state 137
+    inside_function          go to state 145
+    inside_brackets          go to state 146
+    loops_n_condition        go to state 140
+    for_statement            go to state 141
+    do_while                 go to state 142
+    switch                   go to state 143
+    if                       go to state 144
 
 
 State 128
 
-   69 do_while: DO CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT WHILE • BRACKET_LEFT do_condition BRACKET_RIGHT SEMICOLON
+   72 arguments_end: COMMA parameters •
 
-    BRACKET_LEFT  shift, and go to state 134
+    $default  reduce using rule 72 (arguments_end)
 
 
 State 129
 
-   78 switch: SWITCH BRACKET_LEFT VAR_NAME BRACKET_RIGHT CURLY_BRACKET_LEFT • case default CURLY_BRACKET_RIGHT
+   62 class_instance: CLASS_NAME • VAR_NAME EQUAL_SIGN NEW CLASS_NAME BRACKET_LEFT BRACKET_RIGHT
 
-    CASE  shift, and go to state 135
-
-    $default  reduce using rule 80 (case)
-
-    case  go to state 136
+    VAR_NAME  shift, and go to state 147
 
 
 State 130
 
-   28 class_instance: CLASS_NAME VAR_NAME EQUAL_SIGN NEW CLASS_NAME BRACKET_LEFT • BRACKET_RIGHT
+  127 if: IF • BRACKET_LEFT if_condition BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT else_if
 
-    BRACKET_RIGHT  shift, and go to state 137
+    BRACKET_LEFT  shift, and go to state 148
 
 
 State 131
 
-   50 for_statement: FOR BRACKET_LEFT for_condition BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets • CURLY_BRACKET_RIGHT
+   88 for_statement: FOR • BRACKET_LEFT for_condition BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT
 
-    CURLY_BRACKET_RIGHT  shift, and go to state 138
+    BRACKET_LEFT  shift, and go to state 149
 
 
 State 132
 
-   55 for_comparison: VAR_NAME CONDITION_SYMBOL • comparison_value bool_operator
+  107 do_while: DO • CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT WHILE BRACKET_LEFT do_condition BRACKET_RIGHT SEMICOLON
 
-    VAR_NAME       shift, and go to state 139
-    INT_VALUE      shift, and go to state 140
-    CHAR_VALUE     shift, and go to state 141
-    DOUBLE_VALUE   shift, and go to state 142
-    BOOLEAN_VALUE  shift, and go to state 143
-
-    comparison_value  go to state 144
+    CURLY_BRACKET_LEFT  shift, and go to state 150
 
 
 State 133
 
-   51 for_condition: for_variable SEMICOLON for_comparison SEMICOLON • for_step
+  118 switch: SWITCH • BRACKET_LEFT VAR_NAME BRACKET_RIGHT CURLY_BRACKET_LEFT case default CURLY_BRACKET_RIGHT
 
-    VAR_NAME  shift, and go to state 145
-
-    $default  reduce using rule 63 (for_step)
-
-    for_step  go to state 146
+    BRACKET_LEFT  shift, and go to state 151
 
 
 State 134
 
-   69 do_while: DO CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT WHILE BRACKET_LEFT • do_condition BRACKET_RIGHT SEMICOLON
+   84 loops_n_condition: variable_initialization • SEMICOLON
 
-    VAR_NAME       shift, and go to state 147
-    INT_VALUE      shift, and go to state 148
-    CHAR_VALUE     shift, and go to state 149
-    DOUBLE_VALUE   shift, and go to state 150
-    BOOLEAN_VALUE  shift, and go to state 151
-
-    do_condition  go to state 152
-    operand       go to state 153
+    SEMICOLON  shift, and go to state 152
 
 
 State 135
 
-   79 case: CASE • switch_value COLON switch_content case
+   79 inside_brackets: variable_assignment • SEMICOLON
+   85 loops_n_condition: variable_assignment • SEMICOLON
 
-    INT_VALUE   shift, and go to state 154
-    CHAR_VALUE  shift, and go to state 155
-
-    switch_value  go to state 156
+    SEMICOLON  shift, and go to state 153
 
 
 State 136
 
-   78 switch: SWITCH BRACKET_LEFT VAR_NAME BRACKET_RIGHT CURLY_BRACKET_LEFT case • default CURLY_BRACKET_RIGHT
+   86 loops_n_condition: class_instance • SEMICOLON
 
-    DEFAULT  shift, and go to state 157
-
-    $default  reduce using rule 86 (default)
-
-    default  go to state 158
+    SEMICOLON  shift, and go to state 154
 
 
 State 137
 
-   28 class_instance: CLASS_NAME VAR_NAME EQUAL_SIGN NEW CLASS_NAME BRACKET_LEFT BRACKET_RIGHT •
+   87 loops_n_condition: member_access • SEMICOLON
 
-    $default  reduce using rule 28 (class_instance)
+    SEMICOLON  shift, and go to state 155
 
 
 State 138
 
-   50 for_statement: FOR BRACKET_LEFT for_condition BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT •
+   64 functions: function_visibility VOID VAR_NAME BRACKET_LEFT arguments BRACKET_RIGHT CURLY_BRACKET_LEFT inside_void_function • CURLY_BRACKET_RIGHT
 
-    $default  reduce using rule 50 (for_statement)
+    CURLY_BRACKET_RIGHT  shift, and go to state 156
 
 
 State 139
 
-   60 comparison_value: VAR_NAME •
+   73 inside_void_function: inside_brackets •
+   74                     | inside_brackets • RETURN SEMICOLON
 
-    $default  reduce using rule 60 (comparison_value)
+    RETURN  shift, and go to state 157
+
+    $default  reduce using rule 73 (inside_void_function)
 
 
 State 140
 
-   56 comparison_value: INT_VALUE •
+   78 inside_brackets: loops_n_condition • inside_brackets
 
-    $default  reduce using rule 56 (comparison_value)
+    CLASS_NAME  shift, and go to state 129
+    IF          shift, and go to state 130
+    FOR         shift, and go to state 131
+    DO          shift, and go to state 132
+    SWITCH      shift, and go to state 133
+    VAR_NAME    shift, and go to state 11
+    INT         shift, and go to state 26
+    CHAR        shift, and go to state 27
+    DOUBLE      shift, and go to state 28
+    BOOLEAN     shift, and go to state 29
+    STRING      shift, and go to state 30
+
+    $default  reduce using rule 77 (inside_brackets)
+
+    variable_initialization  go to state 134
+    variable_assignment      go to state 135
+    class_instance           go to state 136
+    member_access            go to state 137
+    inside_brackets          go to state 158
+    loops_n_condition        go to state 140
+    for_statement            go to state 141
+    do_while                 go to state 142
+    switch                   go to state 143
+    if                       go to state 144
 
 
 State 141
 
-   58 comparison_value: CHAR_VALUE •
+   80 loops_n_condition: for_statement •
 
-    $default  reduce using rule 58 (comparison_value)
+    $default  reduce using rule 80 (loops_n_condition)
 
 
 State 142
 
-   57 comparison_value: DOUBLE_VALUE •
+   82 loops_n_condition: do_while •
 
-    $default  reduce using rule 57 (comparison_value)
+    $default  reduce using rule 82 (loops_n_condition)
 
 
 State 143
 
-   59 comparison_value: BOOLEAN_VALUE •
+   81 loops_n_condition: switch •
 
-    $default  reduce using rule 59 (comparison_value)
+    $default  reduce using rule 81 (loops_n_condition)
 
 
 State 144
 
-   55 for_comparison: VAR_NAME CONDITION_SYMBOL comparison_value • bool_operator
+   83 loops_n_condition: if •
 
-    BOOL_SYMBOL  shift, and go to state 159
-
-    $default  reduce using rule 61 (bool_operator)
-
-    bool_operator  go to state 160
+    $default  reduce using rule 83 (loops_n_condition)
 
 
 State 145
 
-   64 for_step: VAR_NAME • step
+   65 functions: function_visibility variable_type VAR_NAME BRACKET_LEFT arguments BRACKET_RIGHT CURLY_BRACKET_LEFT inside_function • CURLY_BRACKET_RIGHT
 
-    INCREAMENT_DECREAMENT  shift, and go to state 161
-    LOOP_STEP              shift, and go to state 162
-
-    step  go to state 163
+    CURLY_BRACKET_RIGHT  shift, and go to state 159
 
 
 State 146
 
-   51 for_condition: for_variable SEMICOLON for_comparison SEMICOLON for_step •
+   75 inside_function: inside_brackets • RETURN VAR_NAME SEMICOLON
+   76                | inside_brackets • RETURN variable_value SEMICOLON
 
-    $default  reduce using rule 51 (for_condition)
+    RETURN  shift, and go to state 160
 
 
 State 147
 
-   72 operand: VAR_NAME •
-   77        | VAR_NAME •
+   62 class_instance: CLASS_NAME VAR_NAME • EQUAL_SIGN NEW CLASS_NAME BRACKET_LEFT BRACKET_RIGHT
 
-    BRACKET_RIGHT     reduce using rule 72 (operand)
-    BRACKET_RIGHT     [reduce using rule 77 (operand)]
-    CONDITION_SYMBOL  reduce using rule 72 (operand)
-    CONDITION_SYMBOL  [reduce using rule 77 (operand)]
-    $default          reduce using rule 72 (operand)
+    EQUAL_SIGN  shift, and go to state 161
 
 
 State 148
 
-   73 operand: INT_VALUE •
+  127 if: IF BRACKET_LEFT • if_condition BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT else_if
 
-    $default  reduce using rule 73 (operand)
+    VAR_NAME       shift, and go to state 162
+    INT_VALUE      shift, and go to state 163
+    CHAR_VALUE     shift, and go to state 164
+    DOUBLE_VALUE   shift, and go to state 165
+    BOOLEAN_VALUE  shift, and go to state 166
+
+    operand       go to state 167
+    if_condition  go to state 168
 
 
 State 149
 
-   75 operand: CHAR_VALUE •
+   88 for_statement: FOR BRACKET_LEFT • for_condition BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT
 
-    $default  reduce using rule 75 (operand)
+    INT      shift, and go to state 35
+    CHAR     shift, and go to state 36
+    DOUBLE   shift, and go to state 37
+    BOOLEAN  shift, and go to state 38
+    STRING   shift, and go to state 39
+
+    $default  reduce using rule 90 (for_variable)
+
+    variable_type  go to state 169
+    for_condition  go to state 170
+    for_variable   go to state 171
 
 
 State 150
 
-   74 operand: DOUBLE_VALUE •
+  107 do_while: DO CURLY_BRACKET_LEFT • inside_brackets CURLY_BRACKET_RIGHT WHILE BRACKET_LEFT do_condition BRACKET_RIGHT SEMICOLON
 
-    $default  reduce using rule 74 (operand)
+    CLASS_NAME  shift, and go to state 129
+    IF          shift, and go to state 130
+    FOR         shift, and go to state 131
+    DO          shift, and go to state 132
+    SWITCH      shift, and go to state 133
+    VAR_NAME    shift, and go to state 11
+    INT         shift, and go to state 26
+    CHAR        shift, and go to state 27
+    DOUBLE      shift, and go to state 28
+    BOOLEAN     shift, and go to state 29
+    STRING      shift, and go to state 30
+
+    $default  reduce using rule 77 (inside_brackets)
+
+    variable_initialization  go to state 134
+    variable_assignment      go to state 135
+    class_instance           go to state 136
+    member_access            go to state 137
+    inside_brackets          go to state 172
+    loops_n_condition        go to state 140
+    for_statement            go to state 141
+    do_while                 go to state 142
+    switch                   go to state 143
+    if                       go to state 144
 
 
 State 151
 
-   71 do_condition: BOOLEAN_VALUE •
-   76 operand: BOOLEAN_VALUE •
+  118 switch: SWITCH BRACKET_LEFT • VAR_NAME BRACKET_RIGHT CURLY_BRACKET_LEFT case default CURLY_BRACKET_RIGHT
 
-    CONDITION_SYMBOL  reduce using rule 76 (operand)
-    $default          reduce using rule 71 (do_condition)
+    VAR_NAME  shift, and go to state 173
 
 
 State 152
 
-   69 do_while: DO CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT WHILE BRACKET_LEFT do_condition • BRACKET_RIGHT SEMICOLON
+   84 loops_n_condition: variable_initialization SEMICOLON •
 
-    BRACKET_RIGHT  shift, and go to state 164
+    $default  reduce using rule 84 (loops_n_condition)
 
 
 State 153
 
-   70 do_condition: operand • CONDITION_SYMBOL operand
+   79 inside_brackets: variable_assignment SEMICOLON •
+   85 loops_n_condition: variable_assignment SEMICOLON •
 
-    CONDITION_SYMBOL  shift, and go to state 165
+    CURLY_BRACKET_RIGHT  reduce using rule 79 (inside_brackets)
+    CURLY_BRACKET_RIGHT  [reduce using rule 85 (loops_n_condition)]
+    RETURN               reduce using rule 79 (inside_brackets)
+    RETURN               [reduce using rule 85 (loops_n_condition)]
+    $default             reduce using rule 85 (loops_n_condition)
 
 
 State 154
 
-   81 switch_value: INT_VALUE •
+   86 loops_n_condition: class_instance SEMICOLON •
 
-    $default  reduce using rule 81 (switch_value)
+    $default  reduce using rule 86 (loops_n_condition)
 
 
 State 155
 
-   82 switch_value: CHAR_VALUE •
+   87 loops_n_condition: member_access SEMICOLON •
 
-    $default  reduce using rule 82 (switch_value)
+    $default  reduce using rule 87 (loops_n_condition)
 
 
 State 156
 
-   79 case: CASE switch_value • COLON switch_content case
+   64 functions: function_visibility VOID VAR_NAME BRACKET_LEFT arguments BRACKET_RIGHT CURLY_BRACKET_LEFT inside_void_function CURLY_BRACKET_RIGHT •
 
-    COLON  shift, and go to state 166
+    $default  reduce using rule 64 (functions)
 
 
 State 157
 
-   85 default: DEFAULT • COLON switch_content
+   74 inside_void_function: inside_brackets RETURN • SEMICOLON
 
-    COLON  shift, and go to state 167
+    SEMICOLON  shift, and go to state 174
 
 
 State 158
 
-   78 switch: SWITCH BRACKET_LEFT VAR_NAME BRACKET_RIGHT CURLY_BRACKET_LEFT case default • CURLY_BRACKET_RIGHT
+   78 inside_brackets: loops_n_condition inside_brackets •
 
-    CURLY_BRACKET_RIGHT  shift, and go to state 168
+    $default  reduce using rule 78 (inside_brackets)
 
 
 State 159
 
-   62 bool_operator: BOOL_SYMBOL • for_comparison
+   65 functions: function_visibility variable_type VAR_NAME BRACKET_LEFT arguments BRACKET_RIGHT CURLY_BRACKET_LEFT inside_function CURLY_BRACKET_RIGHT •
 
-    VAR_NAME  shift, and go to state 126
-
-    $default  reduce using rule 54 (for_comparison)
-
-    for_comparison  go to state 169
+    $default  reduce using rule 65 (functions)
 
 
 State 160
 
-   55 for_comparison: VAR_NAME CONDITION_SYMBOL comparison_value bool_operator •
+   75 inside_function: inside_brackets RETURN • VAR_NAME SEMICOLON
+   76                | inside_brackets RETURN • variable_value SEMICOLON
 
-    $default  reduce using rule 55 (for_comparison)
+    VAR_NAME       shift, and go to state 175
+    INT_VALUE      shift, and go to state 58
+    CHAR_VALUE     shift, and go to state 59
+    DOUBLE_VALUE   shift, and go to state 60
+    BOOLEAN_VALUE  shift, and go to state 61
+    STRING_VALUE   shift, and go to state 62
+
+    variable_value  go to state 176
 
 
 State 161
 
-   65 step: INCREAMENT_DECREAMENT •
+   62 class_instance: CLASS_NAME VAR_NAME EQUAL_SIGN • NEW CLASS_NAME BRACKET_LEFT BRACKET_RIGHT
 
-    $default  reduce using rule 65 (step)
+    NEW  shift, and go to state 177
 
 
 State 162
 
-   66 step: LOOP_STEP • step_value
+  113 operand: VAR_NAME •
+  134 if_condition: VAR_NAME •
 
-    INT_VALUE     shift, and go to state 170
-    DOUBLE_VALUE  shift, and go to state 171
-
-    step_value  go to state 172
+    BRACKET_RIGHT  reduce using rule 134 (if_condition)
+    $default       reduce using rule 113 (operand)
 
 
 State 163
 
-   64 for_step: VAR_NAME step •
+  114 operand: INT_VALUE •
 
-    $default  reduce using rule 64 (for_step)
+    $default  reduce using rule 114 (operand)
 
 
 State 164
 
-   69 do_while: DO CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT WHILE BRACKET_LEFT do_condition BRACKET_RIGHT • SEMICOLON
+  116 operand: CHAR_VALUE •
 
-    SEMICOLON  shift, and go to state 173
+    $default  reduce using rule 116 (operand)
 
 
 State 165
 
-   70 do_condition: operand CONDITION_SYMBOL • operand
+  115 operand: DOUBLE_VALUE •
 
-    VAR_NAME       shift, and go to state 147
-    INT_VALUE      shift, and go to state 148
-    CHAR_VALUE     shift, and go to state 149
-    DOUBLE_VALUE   shift, and go to state 150
-    BOOLEAN_VALUE  shift, and go to state 174
-
-    operand  go to state 175
+    $default  reduce using rule 115 (operand)
 
 
 State 166
 
-   79 case: CASE switch_value COLON • switch_content case
+  117 operand: BOOLEAN_VALUE •
+  133 if_condition: BOOLEAN_VALUE •
 
-    BREAK  shift, and go to state 176
-
-    $default  reduce using rule 83 (switch_content)
-
-    switch_content  go to state 177
+    BRACKET_RIGHT  reduce using rule 133 (if_condition)
+    $default       reduce using rule 117 (operand)
 
 
 State 167
 
-   85 default: DEFAULT COLON • switch_content
+  132 if_condition: operand • CONDITION_SYMBOL operand if_bool_operator
 
-    BREAK  shift, and go to state 176
-
-    $default  reduce using rule 83 (switch_content)
-
-    switch_content  go to state 178
+    CONDITION_SYMBOL  shift, and go to state 178
 
 
 State 168
 
-   78 switch: SWITCH BRACKET_LEFT VAR_NAME BRACKET_RIGHT CURLY_BRACKET_LEFT case default CURLY_BRACKET_RIGHT •
+  127 if: IF BRACKET_LEFT if_condition • BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT else_if
 
-    $default  reduce using rule 78 (switch)
+    BRACKET_RIGHT  shift, and go to state 179
 
 
 State 169
 
-   62 bool_operator: BOOL_SYMBOL for_comparison •
+   91 for_variable: variable_type • VAR_NAME EQUAL_SIGN variable_value
 
-    $default  reduce using rule 62 (bool_operator)
+    VAR_NAME  shift, and go to state 180
 
 
 State 170
 
-   67 step_value: INT_VALUE •
+   88 for_statement: FOR BRACKET_LEFT for_condition • BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT
 
-    $default  reduce using rule 67 (step_value)
+    BRACKET_RIGHT  shift, and go to state 181
 
 
 State 171
 
-   68 step_value: DOUBLE_VALUE •
+   89 for_condition: for_variable • SEMICOLON for_comparison SEMICOLON for_step
 
-    $default  reduce using rule 68 (step_value)
+    SEMICOLON  shift, and go to state 182
 
 
 State 172
 
-   66 step: LOOP_STEP step_value •
+  107 do_while: DO CURLY_BRACKET_LEFT inside_brackets • CURLY_BRACKET_RIGHT WHILE BRACKET_LEFT do_condition BRACKET_RIGHT SEMICOLON
 
-    $default  reduce using rule 66 (step)
+    CURLY_BRACKET_RIGHT  shift, and go to state 183
 
 
 State 173
 
-   69 do_while: DO CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT WHILE BRACKET_LEFT do_condition BRACKET_RIGHT SEMICOLON •
+  118 switch: SWITCH BRACKET_LEFT VAR_NAME • BRACKET_RIGHT CURLY_BRACKET_LEFT case default CURLY_BRACKET_RIGHT
 
-    $default  reduce using rule 69 (do_while)
+    BRACKET_RIGHT  shift, and go to state 184
 
 
 State 174
 
-   76 operand: BOOLEAN_VALUE •
+   74 inside_void_function: inside_brackets RETURN SEMICOLON •
 
-    $default  reduce using rule 76 (operand)
+    $default  reduce using rule 74 (inside_void_function)
 
 
 State 175
 
-   70 do_condition: operand CONDITION_SYMBOL operand •
+   75 inside_function: inside_brackets RETURN VAR_NAME • SEMICOLON
 
-    $default  reduce using rule 70 (do_condition)
+    SEMICOLON  shift, and go to state 185
 
 
 State 176
 
-   84 switch_content: BREAK •
+   76 inside_function: inside_brackets RETURN variable_value • SEMICOLON
 
-    $default  reduce using rule 84 (switch_content)
+    SEMICOLON  shift, and go to state 186
 
 
 State 177
 
-   79 case: CASE switch_value COLON switch_content • case
+   62 class_instance: CLASS_NAME VAR_NAME EQUAL_SIGN NEW • CLASS_NAME BRACKET_LEFT BRACKET_RIGHT
 
-    CASE  shift, and go to state 135
-
-    $default  reduce using rule 80 (case)
-
-    case  go to state 179
+    CLASS_NAME  shift, and go to state 187
 
 
 State 178
 
-   85 default: DEFAULT COLON switch_content •
+  132 if_condition: operand CONDITION_SYMBOL • operand if_bool_operator
 
-    $default  reduce using rule 85 (default)
+    VAR_NAME       shift, and go to state 188
+    INT_VALUE      shift, and go to state 163
+    CHAR_VALUE     shift, and go to state 164
+    DOUBLE_VALUE   shift, and go to state 165
+    BOOLEAN_VALUE  shift, and go to state 189
+
+    operand  go to state 190
 
 
 State 179
 
-   79 case: CASE switch_value COLON switch_content case •
+  127 if: IF BRACKET_LEFT if_condition BRACKET_RIGHT • CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT else_if
 
-    $default  reduce using rule 79 (case)
+    CURLY_BRACKET_LEFT  shift, and go to state 191
+
+
+State 180
+
+   91 for_variable: variable_type VAR_NAME • EQUAL_SIGN variable_value
+
+    EQUAL_SIGN  shift, and go to state 192
+
+
+State 181
+
+   88 for_statement: FOR BRACKET_LEFT for_condition BRACKET_RIGHT • CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT
+
+    CURLY_BRACKET_LEFT  shift, and go to state 193
+
+
+State 182
+
+   89 for_condition: for_variable SEMICOLON • for_comparison SEMICOLON for_step
+
+    VAR_NAME  shift, and go to state 194
+
+    $default  reduce using rule 92 (for_comparison)
+
+    for_comparison  go to state 195
+
+
+State 183
+
+  107 do_while: DO CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT • WHILE BRACKET_LEFT do_condition BRACKET_RIGHT SEMICOLON
+
+    WHILE  shift, and go to state 196
+
+
+State 184
+
+  118 switch: SWITCH BRACKET_LEFT VAR_NAME BRACKET_RIGHT • CURLY_BRACKET_LEFT case default CURLY_BRACKET_RIGHT
+
+    CURLY_BRACKET_LEFT  shift, and go to state 197
+
+
+State 185
+
+   75 inside_function: inside_brackets RETURN VAR_NAME SEMICOLON •
+
+    $default  reduce using rule 75 (inside_function)
+
+
+State 186
+
+   76 inside_function: inside_brackets RETURN variable_value SEMICOLON •
+
+    $default  reduce using rule 76 (inside_function)
+
+
+State 187
+
+   62 class_instance: CLASS_NAME VAR_NAME EQUAL_SIGN NEW CLASS_NAME • BRACKET_LEFT BRACKET_RIGHT
+
+    BRACKET_LEFT  shift, and go to state 198
+
+
+State 188
+
+  113 operand: VAR_NAME •
+
+    $default  reduce using rule 113 (operand)
+
+
+State 189
+
+  117 operand: BOOLEAN_VALUE •
+
+    $default  reduce using rule 117 (operand)
+
+
+State 190
+
+  132 if_condition: operand CONDITION_SYMBOL operand • if_bool_operator
+
+    BOOL_SYMBOL  shift, and go to state 199
+
+    $default  reduce using rule 135 (if_bool_operator)
+
+    if_bool_operator  go to state 200
+
+
+State 191
+
+  127 if: IF BRACKET_LEFT if_condition BRACKET_RIGHT CURLY_BRACKET_LEFT • inside_brackets CURLY_BRACKET_RIGHT else_if
+
+    CLASS_NAME  shift, and go to state 129
+    IF          shift, and go to state 130
+    FOR         shift, and go to state 131
+    DO          shift, and go to state 132
+    SWITCH      shift, and go to state 133
+    VAR_NAME    shift, and go to state 11
+    INT         shift, and go to state 26
+    CHAR        shift, and go to state 27
+    DOUBLE      shift, and go to state 28
+    BOOLEAN     shift, and go to state 29
+    STRING      shift, and go to state 30
+
+    $default  reduce using rule 77 (inside_brackets)
+
+    variable_initialization  go to state 134
+    variable_assignment      go to state 135
+    class_instance           go to state 136
+    member_access            go to state 137
+    inside_brackets          go to state 201
+    loops_n_condition        go to state 140
+    for_statement            go to state 141
+    do_while                 go to state 142
+    switch                   go to state 143
+    if                       go to state 144
+
+
+State 192
+
+   91 for_variable: variable_type VAR_NAME EQUAL_SIGN • variable_value
+
+    INT_VALUE      shift, and go to state 58
+    CHAR_VALUE     shift, and go to state 59
+    DOUBLE_VALUE   shift, and go to state 60
+    BOOLEAN_VALUE  shift, and go to state 61
+    STRING_VALUE   shift, and go to state 62
+
+    variable_value  go to state 202
+
+
+State 193
+
+   88 for_statement: FOR BRACKET_LEFT for_condition BRACKET_RIGHT CURLY_BRACKET_LEFT • inside_brackets CURLY_BRACKET_RIGHT
+
+    CLASS_NAME  shift, and go to state 129
+    IF          shift, and go to state 130
+    FOR         shift, and go to state 131
+    DO          shift, and go to state 132
+    SWITCH      shift, and go to state 133
+    VAR_NAME    shift, and go to state 11
+    INT         shift, and go to state 26
+    CHAR        shift, and go to state 27
+    DOUBLE      shift, and go to state 28
+    BOOLEAN     shift, and go to state 29
+    STRING      shift, and go to state 30
+
+    $default  reduce using rule 77 (inside_brackets)
+
+    variable_initialization  go to state 134
+    variable_assignment      go to state 135
+    class_instance           go to state 136
+    member_access            go to state 137
+    inside_brackets          go to state 203
+    loops_n_condition        go to state 140
+    for_statement            go to state 141
+    do_while                 go to state 142
+    switch                   go to state 143
+    if                       go to state 144
+
+
+State 194
+
+   93 for_comparison: VAR_NAME • CONDITION_SYMBOL comparison_value for_bool_operator
+
+    CONDITION_SYMBOL  shift, and go to state 204
+
+
+State 195
+
+   89 for_condition: for_variable SEMICOLON for_comparison • SEMICOLON for_step
+
+    SEMICOLON  shift, and go to state 205
+
+
+State 196
+
+  107 do_while: DO CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT WHILE • BRACKET_LEFT do_condition BRACKET_RIGHT SEMICOLON
+
+    BRACKET_LEFT  shift, and go to state 206
+
+
+State 197
+
+  118 switch: SWITCH BRACKET_LEFT VAR_NAME BRACKET_RIGHT CURLY_BRACKET_LEFT • case default CURLY_BRACKET_RIGHT
+
+    CASE  shift, and go to state 207
+
+    $default  reduce using rule 120 (case)
+
+    case  go to state 208
+
+
+State 198
+
+   62 class_instance: CLASS_NAME VAR_NAME EQUAL_SIGN NEW CLASS_NAME BRACKET_LEFT • BRACKET_RIGHT
+
+    BRACKET_RIGHT  shift, and go to state 209
+
+
+State 199
+
+  136 if_bool_operator: BOOL_SYMBOL • if_condition
+
+    VAR_NAME       shift, and go to state 162
+    INT_VALUE      shift, and go to state 163
+    CHAR_VALUE     shift, and go to state 164
+    DOUBLE_VALUE   shift, and go to state 165
+    BOOLEAN_VALUE  shift, and go to state 166
+
+    operand       go to state 167
+    if_condition  go to state 210
+
+
+State 200
+
+  132 if_condition: operand CONDITION_SYMBOL operand if_bool_operator •
+
+    $default  reduce using rule 132 (if_condition)
+
+
+State 201
+
+  127 if: IF BRACKET_LEFT if_condition BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets • CURLY_BRACKET_RIGHT else_if
+
+    CURLY_BRACKET_RIGHT  shift, and go to state 211
+
+
+State 202
+
+   91 for_variable: variable_type VAR_NAME EQUAL_SIGN variable_value •
+
+    $default  reduce using rule 91 (for_variable)
+
+
+State 203
+
+   88 for_statement: FOR BRACKET_LEFT for_condition BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets • CURLY_BRACKET_RIGHT
+
+    CURLY_BRACKET_RIGHT  shift, and go to state 212
+
+
+State 204
+
+   93 for_comparison: VAR_NAME CONDITION_SYMBOL • comparison_value for_bool_operator
+
+    VAR_NAME       shift, and go to state 213
+    INT_VALUE      shift, and go to state 214
+    CHAR_VALUE     shift, and go to state 215
+    DOUBLE_VALUE   shift, and go to state 216
+    BOOLEAN_VALUE  shift, and go to state 217
+
+    comparison_value  go to state 218
+
+
+State 205
+
+   89 for_condition: for_variable SEMICOLON for_comparison SEMICOLON • for_step
+
+    VAR_NAME  shift, and go to state 219
+
+    $default  reduce using rule 101 (for_step)
+
+    for_step  go to state 220
+
+
+State 206
+
+  107 do_while: DO CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT WHILE BRACKET_LEFT • do_condition BRACKET_RIGHT SEMICOLON
+
+    VAR_NAME       shift, and go to state 221
+    INT_VALUE      shift, and go to state 163
+    CHAR_VALUE     shift, and go to state 164
+    DOUBLE_VALUE   shift, and go to state 165
+    BOOLEAN_VALUE  shift, and go to state 222
+
+    do_condition  go to state 223
+    operand       go to state 224
+
+
+State 207
+
+  119 case: CASE • switch_value COLON switch_content case
+
+    INT_VALUE   shift, and go to state 225
+    CHAR_VALUE  shift, and go to state 226
+
+    switch_value  go to state 227
+
+
+State 208
+
+  118 switch: SWITCH BRACKET_LEFT VAR_NAME BRACKET_RIGHT CURLY_BRACKET_LEFT case • default CURLY_BRACKET_RIGHT
+
+    DEFAULT  shift, and go to state 228
+
+    $default  reduce using rule 126 (default)
+
+    default  go to state 229
+
+
+State 209
+
+   62 class_instance: CLASS_NAME VAR_NAME EQUAL_SIGN NEW CLASS_NAME BRACKET_LEFT BRACKET_RIGHT •
+
+    $default  reduce using rule 62 (class_instance)
+
+
+State 210
+
+  136 if_bool_operator: BOOL_SYMBOL if_condition •
+
+    $default  reduce using rule 136 (if_bool_operator)
+
+
+State 211
+
+  127 if: IF BRACKET_LEFT if_condition BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT • else_if
+
+    ELSE  shift, and go to state 230
+
+    $default  reduce using rule 128 (else_if)
+
+    else_if  go to state 231
+    else     go to state 232
+
+
+State 212
+
+   88 for_statement: FOR BRACKET_LEFT for_condition BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT •
+
+    $default  reduce using rule 88 (for_statement)
+
+
+State 213
+
+   98 comparison_value: VAR_NAME •
+
+    $default  reduce using rule 98 (comparison_value)
+
+
+State 214
+
+   94 comparison_value: INT_VALUE •
+
+    $default  reduce using rule 94 (comparison_value)
+
+
+State 215
+
+   96 comparison_value: CHAR_VALUE •
+
+    $default  reduce using rule 96 (comparison_value)
+
+
+State 216
+
+   95 comparison_value: DOUBLE_VALUE •
+
+    $default  reduce using rule 95 (comparison_value)
+
+
+State 217
+
+   97 comparison_value: BOOLEAN_VALUE •
+
+    $default  reduce using rule 97 (comparison_value)
+
+
+State 218
+
+   93 for_comparison: VAR_NAME CONDITION_SYMBOL comparison_value • for_bool_operator
+
+    BOOL_SYMBOL  shift, and go to state 233
+
+    $default  reduce using rule 99 (for_bool_operator)
+
+    for_bool_operator  go to state 234
+
+
+State 219
+
+  102 for_step: VAR_NAME • step
+
+    INCREAMENT_DECREAMENT  shift, and go to state 235
+    LOOP_STEP              shift, and go to state 236
+
+    step  go to state 237
+
+
+State 220
+
+   89 for_condition: for_variable SEMICOLON for_comparison SEMICOLON for_step •
+
+    $default  reduce using rule 89 (for_condition)
+
+
+State 221
+
+  110 do_condition: VAR_NAME •
+  113 operand: VAR_NAME •
+
+    CONDITION_SYMBOL  reduce using rule 113 (operand)
+    $default          reduce using rule 110 (do_condition)
+
+
+State 222
+
+  109 do_condition: BOOLEAN_VALUE •
+  117 operand: BOOLEAN_VALUE •
+
+    CONDITION_SYMBOL  reduce using rule 117 (operand)
+    $default          reduce using rule 109 (do_condition)
+
+
+State 223
+
+  107 do_while: DO CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT WHILE BRACKET_LEFT do_condition • BRACKET_RIGHT SEMICOLON
+
+    BRACKET_RIGHT  shift, and go to state 238
+
+
+State 224
+
+  108 do_condition: operand • CONDITION_SYMBOL operand do_bool_operator
+
+    CONDITION_SYMBOL  shift, and go to state 239
+
+
+State 225
+
+  121 switch_value: INT_VALUE •
+
+    $default  reduce using rule 121 (switch_value)
+
+
+State 226
+
+  122 switch_value: CHAR_VALUE •
+
+    $default  reduce using rule 122 (switch_value)
+
+
+State 227
+
+  119 case: CASE switch_value • COLON switch_content case
+
+    COLON  shift, and go to state 240
+
+
+State 228
+
+  125 default: DEFAULT • COLON switch_content
+
+    COLON  shift, and go to state 241
+
+
+State 229
+
+  118 switch: SWITCH BRACKET_LEFT VAR_NAME BRACKET_RIGHT CURLY_BRACKET_LEFT case default • CURLY_BRACKET_RIGHT
+
+    CURLY_BRACKET_RIGHT  shift, and go to state 242
+
+
+State 230
+
+  129 else_if: ELSE • IF BRACKET_LEFT if_condition BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT else_if
+  131 else: ELSE • CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT
+
+    CURLY_BRACKET_LEFT  shift, and go to state 243
+    IF                  shift, and go to state 244
+
+
+State 231
+
+  127 if: IF BRACKET_LEFT if_condition BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT else_if •
+
+    $default  reduce using rule 127 (if)
+
+
+State 232
+
+  130 else_if: else •
+
+    $default  reduce using rule 130 (else_if)
+
+
+State 233
+
+  100 for_bool_operator: BOOL_SYMBOL • for_comparison
+
+    VAR_NAME  shift, and go to state 194
+
+    $default  reduce using rule 92 (for_comparison)
+
+    for_comparison  go to state 245
+
+
+State 234
+
+   93 for_comparison: VAR_NAME CONDITION_SYMBOL comparison_value for_bool_operator •
+
+    $default  reduce using rule 93 (for_comparison)
+
+
+State 235
+
+  103 step: INCREAMENT_DECREAMENT •
+
+    $default  reduce using rule 103 (step)
+
+
+State 236
+
+  104 step: LOOP_STEP • step_value
+
+    INT_VALUE     shift, and go to state 246
+    DOUBLE_VALUE  shift, and go to state 247
+
+    step_value  go to state 248
+
+
+State 237
+
+  102 for_step: VAR_NAME step •
+
+    $default  reduce using rule 102 (for_step)
+
+
+State 238
+
+  107 do_while: DO CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT WHILE BRACKET_LEFT do_condition BRACKET_RIGHT • SEMICOLON
+
+    SEMICOLON  shift, and go to state 249
+
+
+State 239
+
+  108 do_condition: operand CONDITION_SYMBOL • operand do_bool_operator
+
+    VAR_NAME       shift, and go to state 188
+    INT_VALUE      shift, and go to state 163
+    CHAR_VALUE     shift, and go to state 164
+    DOUBLE_VALUE   shift, and go to state 165
+    BOOLEAN_VALUE  shift, and go to state 189
+
+    operand  go to state 250
+
+
+State 240
+
+  119 case: CASE switch_value COLON • switch_content case
+
+    BREAK  shift, and go to state 251
+
+    $default  reduce using rule 123 (switch_content)
+
+    switch_content  go to state 252
+
+
+State 241
+
+  125 default: DEFAULT COLON • switch_content
+
+    BREAK  shift, and go to state 251
+
+    $default  reduce using rule 123 (switch_content)
+
+    switch_content  go to state 253
+
+
+State 242
+
+  118 switch: SWITCH BRACKET_LEFT VAR_NAME BRACKET_RIGHT CURLY_BRACKET_LEFT case default CURLY_BRACKET_RIGHT •
+
+    $default  reduce using rule 118 (switch)
+
+
+State 243
+
+  131 else: ELSE CURLY_BRACKET_LEFT • inside_brackets CURLY_BRACKET_RIGHT
+
+    CLASS_NAME  shift, and go to state 129
+    IF          shift, and go to state 130
+    FOR         shift, and go to state 131
+    DO          shift, and go to state 132
+    SWITCH      shift, and go to state 133
+    VAR_NAME    shift, and go to state 11
+    INT         shift, and go to state 26
+    CHAR        shift, and go to state 27
+    DOUBLE      shift, and go to state 28
+    BOOLEAN     shift, and go to state 29
+    STRING      shift, and go to state 30
+
+    $default  reduce using rule 77 (inside_brackets)
+
+    variable_initialization  go to state 134
+    variable_assignment      go to state 135
+    class_instance           go to state 136
+    member_access            go to state 137
+    inside_brackets          go to state 254
+    loops_n_condition        go to state 140
+    for_statement            go to state 141
+    do_while                 go to state 142
+    switch                   go to state 143
+    if                       go to state 144
+
+
+State 244
+
+  129 else_if: ELSE IF • BRACKET_LEFT if_condition BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT else_if
+
+    BRACKET_LEFT  shift, and go to state 255
+
+
+State 245
+
+  100 for_bool_operator: BOOL_SYMBOL for_comparison •
+
+    $default  reduce using rule 100 (for_bool_operator)
+
+
+State 246
+
+  105 step_value: INT_VALUE •
+
+    $default  reduce using rule 105 (step_value)
+
+
+State 247
+
+  106 step_value: DOUBLE_VALUE •
+
+    $default  reduce using rule 106 (step_value)
+
+
+State 248
+
+  104 step: LOOP_STEP step_value •
+
+    $default  reduce using rule 104 (step)
+
+
+State 249
+
+  107 do_while: DO CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT WHILE BRACKET_LEFT do_condition BRACKET_RIGHT SEMICOLON •
+
+    $default  reduce using rule 107 (do_while)
+
+
+State 250
+
+  108 do_condition: operand CONDITION_SYMBOL operand • do_bool_operator
+
+    BOOL_SYMBOL  shift, and go to state 256
+
+    $default  reduce using rule 111 (do_bool_operator)
+
+    do_bool_operator  go to state 257
+
+
+State 251
+
+  124 switch_content: BREAK • SEMICOLON
+
+    SEMICOLON  shift, and go to state 258
+
+
+State 252
+
+  119 case: CASE switch_value COLON switch_content • case
+
+    CASE  shift, and go to state 207
+
+    $default  reduce using rule 120 (case)
+
+    case  go to state 259
+
+
+State 253
+
+  125 default: DEFAULT COLON switch_content •
+
+    $default  reduce using rule 125 (default)
+
+
+State 254
+
+  131 else: ELSE CURLY_BRACKET_LEFT inside_brackets • CURLY_BRACKET_RIGHT
+
+    CURLY_BRACKET_RIGHT  shift, and go to state 260
+
+
+State 255
+
+  129 else_if: ELSE IF BRACKET_LEFT • if_condition BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT else_if
+
+    VAR_NAME       shift, and go to state 162
+    INT_VALUE      shift, and go to state 163
+    CHAR_VALUE     shift, and go to state 164
+    DOUBLE_VALUE   shift, and go to state 165
+    BOOLEAN_VALUE  shift, and go to state 166
+
+    operand       go to state 167
+    if_condition  go to state 261
+
+
+State 256
+
+  112 do_bool_operator: BOOL_SYMBOL • do_condition
+
+    VAR_NAME       shift, and go to state 221
+    INT_VALUE      shift, and go to state 163
+    CHAR_VALUE     shift, and go to state 164
+    DOUBLE_VALUE   shift, and go to state 165
+    BOOLEAN_VALUE  shift, and go to state 222
+
+    do_condition  go to state 262
+    operand       go to state 224
+
+
+State 257
+
+  108 do_condition: operand CONDITION_SYMBOL operand do_bool_operator •
+
+    $default  reduce using rule 108 (do_condition)
+
+
+State 258
+
+  124 switch_content: BREAK SEMICOLON •
+
+    $default  reduce using rule 124 (switch_content)
+
+
+State 259
+
+  119 case: CASE switch_value COLON switch_content case •
+
+    $default  reduce using rule 119 (case)
+
+
+State 260
+
+  131 else: ELSE CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT •
+
+    $default  reduce using rule 131 (else)
+
+
+State 261
+
+  129 else_if: ELSE IF BRACKET_LEFT if_condition • BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT else_if
+
+    BRACKET_RIGHT  shift, and go to state 263
+
+
+State 262
+
+  112 do_bool_operator: BOOL_SYMBOL do_condition •
+
+    $default  reduce using rule 112 (do_bool_operator)
+
+
+State 263
+
+  129 else_if: ELSE IF BRACKET_LEFT if_condition BRACKET_RIGHT • CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT else_if
+
+    CURLY_BRACKET_LEFT  shift, and go to state 264
+
+
+State 264
+
+  129 else_if: ELSE IF BRACKET_LEFT if_condition BRACKET_RIGHT CURLY_BRACKET_LEFT • inside_brackets CURLY_BRACKET_RIGHT else_if
+
+    CLASS_NAME  shift, and go to state 129
+    IF          shift, and go to state 130
+    FOR         shift, and go to state 131
+    DO          shift, and go to state 132
+    SWITCH      shift, and go to state 133
+    VAR_NAME    shift, and go to state 11
+    INT         shift, and go to state 26
+    CHAR        shift, and go to state 27
+    DOUBLE      shift, and go to state 28
+    BOOLEAN     shift, and go to state 29
+    STRING      shift, and go to state 30
+
+    $default  reduce using rule 77 (inside_brackets)
+
+    variable_initialization  go to state 134
+    variable_assignment      go to state 135
+    class_instance           go to state 136
+    member_access            go to state 137
+    inside_brackets          go to state 265
+    loops_n_condition        go to state 140
+    for_statement            go to state 141
+    do_while                 go to state 142
+    switch                   go to state 143
+    if                       go to state 144
+
+
+State 265
+
+  129 else_if: ELSE IF BRACKET_LEFT if_condition BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets • CURLY_BRACKET_RIGHT else_if
+
+    CURLY_BRACKET_RIGHT  shift, and go to state 266
+
+
+State 266
+
+  129 else_if: ELSE IF BRACKET_LEFT if_condition BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT • else_if
+
+    ELSE  shift, and go to state 230
+
+    $default  reduce using rule 128 (else_if)
+
+    else_if  go to state 267
+    else     go to state 232
+
+
+State 267
+
+  129 else_if: ELSE IF BRACKET_LEFT if_condition BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT else_if •
+
+    $default  reduce using rule 129 (else_if)

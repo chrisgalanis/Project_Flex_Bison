@@ -1,8 +1,24 @@
-public class  Ab {
-    String x = "Absg";
-    boolean x = false;
-    boolean y = true;
+public class  Ab 
+{
+   int xs;
+    xs = (a - (5 / (4)));
 
+    public void sandwitch()
+    {
+        if ( a  )
+        {
+
+        }
+        else if ( b )
+        {
+
+        }
+        else 
+        {
+
+        }
+    }
 
 }
+
 
