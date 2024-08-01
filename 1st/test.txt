@@ -1,24 +1,13 @@
 public class  Ab 
 {
- //   int xs;
- //   xs = (a - (5 / (4)));
 
-    public void sandwitch()
-    {
-        if ( a  )
-        {
+     x = 5 + (3 - 4);
 
-        }
-        else if ( b )
-        {
+    // ERROR //
+    a = “this is \‘valid\’ too” ;
+    
 
-        }
-        else 
-        {
-
-        }
-    }
-
+ 
 }
 
 

@@ -32,7 +32,7 @@ PRIVATE "private"
 "}" {printf("\n } \n");return CURLY_BRACKET_RIGHT;}
 "(" {printf("\n ( \n");return BRACKET_LEFT;}
 ")" {printf("\n ) \n");return BRACKET_RIGHT;}
-"=" {return EQUAL_SIGN;}
+"=" {printf("\n = \n");return EQUAL_SIGN;}
 ";" {printf("\n ; \n");return SEMICOLON;}
 "'" {return SINGLE_MARK;}
 ":" {return COLON;}
@@ -66,6 +66,7 @@ PRIVATE "private"
 {VOID} {return VOID;}
 {INT} {return INT;}
 {CHAR} {return CHAR;}
+{STRING} {return STRING;}
 {DOUBLE} {return DOUBLE;}
 {BOOLEAN} {return BOOLEAN;}
 
@@ -79,6 +80,7 @@ PRIVATE "private"
 [+|-]?[0-9]+ {return INT_VALUE;}
 [+|-]?[0-9]+[.][0-9]+[d] {return DOUBLE_VALUE;}
 ['][ -~]?['] {return CHAR_VALUE;}
+["][ -~]*["] {return STRING_VALUE;}
 {TRUE}|{FALSE} {return BOOLEAN_VALUE;}
 [A-Za-z_][A-Za-z0-9_]* {printf("\nVAR NAME\n");return VAR_NAME;}
 

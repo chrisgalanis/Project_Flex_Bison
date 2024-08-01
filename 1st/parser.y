@@ -98,8 +98,22 @@ member_access: VAR_NAME DOT VAR_NAME ; //End Class Instance
 //expressions
 variable_assignment:  VAR_NAME EQUAL_SIGN expression;
 expression: expression PLUS term |expression MINUS term |  BRACKET_LEFT expression  BRACKET_RIGHT | term;
-term: term MULTIPLY id | term DIVIDE id | BRACKET_LEFT term BRACKET_RIGHT | id;
+term: expression | term MULTIPLY id | term DIVIDE id | BRACKET_LEFT term BRACKET_RIGHT | id;
 id: variable_value | VAR_NAME |  BRACKET_LEFT id  BRACKET_RIGHT;
+
+//My kostas branch
+/*variable_assignment:  VAR_NAME EQUAL_SIGN variable_value {printf("\nVariable  assign is identified\n");};
+variable_value:  expression|INT_VALUE | CHAR_VALUE | DOUBLE_VALUE | BOOLEAN_VALUE | STRING_VALUE|VAR_NAME ;
+expression:  variable_value operation variable_value {printf("\nexpression is identified\n");}
+| BRACKET_LEFT expression BRACKET_RIGHT ;
+operation: PLUS |MINUS|MULTIPLY|DIVIDE;
+variable_type: INT   
+              |DOUBLE
+              |CHAR
+              |BOOLEAN
+              |STRING ;
+*/
+
 
 /*variable_action: other | other expression_operation  other ;
 other: number | BRACKET_LEFT number expression_operation other BRACKET_RIGHT | BRACKET_LEFT number BRACKET_RIGHT; 
