@@ -97,9 +97,9 @@ member_access: VAR_NAME DOT VAR_NAME ; //End Class Instance
 // !! Assignement Επιπλέον, η σύνθετη παράσταση μπορεί να είναι οποιαδήποτε αριθμητική παράσταση που περιλαμβάνει τις πράξεις +, -, *, /.  
 //expressions
 variable_assignment:  VAR_NAME EQUAL_SIGN expression;
-expression: expression PLUS term |expression MINUS term |  BRACKET_LEFT expression  BRACKET_RIGHT | term;
-term: expression | term MULTIPLY id | term DIVIDE id | BRACKET_LEFT term BRACKET_RIGHT | id;
-id: variable_value | VAR_NAME |  BRACKET_LEFT id  BRACKET_RIGHT;
+expression: expression PLUS term |expression MINUS term |  BRACKET_LEFT expression  BRACKET_RIGHT | term  ;
+term:  term MULTIPLY id | term DIVIDE id | BRACKET_LEFT term BRACKET_RIGHT | BRACKET_LEFT expression BRACKET_RIGHT | id  ;
+id: variable_value  | VAR_NAME |  BRACKET_LEFT id  BRACKET_RIGHT;
 
 //My kostas branch
 /*variable_assignment:  VAR_NAME EQUAL_SIGN variable_value {printf("\nVariable  assign is identified\n");};
@@ -115,11 +115,11 @@ variable_type: INT
 */
 
 
-/*variable_action: other | other expression_operation  other ;
+/* variable_action: other | other expression_operation  other ;
 other: number | BRACKET_LEFT number expression_operation other BRACKET_RIGHT | BRACKET_LEFT number BRACKET_RIGHT; 
 expression_operation: PLUS | MINUS | DIVIDE | MULTIPLY;
-number: INT_VALUE | DOUBLE_VALUE | CHAR_VALUE | VAR_NAME;
-*/
+number: INT_VALUE | DOUBLE_VALUE | CHAR_VALUE | VAR_NAME; */
+
 
 // Functions
 functions: function_visibility VOID VAR_NAME BRACKET_LEFT arguments BRACKET_RIGHT CURLY_BRACKET_LEFT inside_void_function CURLY_BRACKET_RIGHT 
@@ -166,7 +166,7 @@ operand: VAR_NAME | INT_VALUE | DOUBLE_VALUE | CHAR_VALUE | BOOLEAN_VALUE ;
 variable_initialization:  variable_type VAR_NAME  ;
  
 
-variable_value:  INT_VALUE | CHAR_VALUE | DOUBLE_VALUE | BOOLEAN_VALUE | STRING_VALUE ; 
+variable_value:  INT_VALUE | CHAR_VALUE | DOUBLE_VALUE | BOOLEAN_VALUE | STRING_VALUE  ; 
 
 // Switch  
 switch: SWITCH BRACKET_LEFT VAR_NAME BRACKET_RIGHT CURLY_BRACKET_LEFT case default CURLY_BRACKET_RIGHT {printf("\n Switch\n");};

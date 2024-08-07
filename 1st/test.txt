@@ -1,10 +1,14 @@
 public class  Ab 
 {
-
-     x = 5 + (3 - 4);
-
     // ERROR //
-    a = “this is \‘valid\’ too” ;
+    x = 5 + ( 3 - 4 ) ;
+
+    
+
+    a = "Hello123$" ;
+    b = "This is a valid str1ng";
+    c = "this is valid; \ f \ p 'anus' too";
+    
     
 
  
