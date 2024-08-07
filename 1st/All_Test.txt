@@ -218,4 +218,27 @@ public class  Ab {
 
 }
 
+-----------------------------------------------------
+
+public class  Ab 
+{
+    // ERROR //
+    x = (5 *  3) - 4 ;
+    x = (5 + 4) / 4 ;
+    x =  5 + (4 * 4);
+    x = 5 + (2 - 4) ;
+    x = 5 * (2 + 4) ;
+    x = 6 * ( 2 / 4) ;
+
+    
+
+    a = "Hello123$" ;
+    b = "This is a valid str1ng";
+    c = "this is valid; \ f \ p 'anus' too";
+    
+    
+
+ 
+}
+
 

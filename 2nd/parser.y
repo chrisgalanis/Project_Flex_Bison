@@ -119,10 +119,10 @@ char_init: VAR_NAME   | VAR_NAME EQUAL_SIGN CHAR_VALUE {printf("char %s = '%c'",
 bool_init: VAR_NAME   | VAR_NAME EQUAL_SIGN BOOLEAN_VALUE {printf("bool %s = %s",$1,$3);};
 string_init: VAR_NAME | VAR_NAME EQUAL_SIGN STRING_VALUE {printf("char* %s = %s",$1,$3);} ;
 
-variable_assignment:  VAR_NAME {printf("init");} EQUAL_SIGN expression;
-expression: expression PLUS term |expression MINUS term |  BRACKET_LEFT expression  BRACKET_RIGHT | term;
-term: term MULTIPLY id | term DIVIDE id | BRACKET_LEFT term BRACKET_RIGHT | id;
-id: variable_value | VAR_NAME |  BRACKET_LEFT id  BRACKET_RIGHT;
+variable_assignment:  VAR_NAME EQUAL_SIGN expression;
+expression: expression PLUS term |expression MINUS term |  BRACKET_LEFT expression  BRACKET_RIGHT | term  ;
+term:  term MULTIPLY id | term DIVIDE id | BRACKET_LEFT term BRACKET_RIGHT | BRACKET_LEFT expression BRACKET_RIGHT | id  ;
+id: variable_value  | VAR_NAME |  BRACKET_LEFT id  BRACKET_RIGHT | BRACKET_LEFT expression BRACKET_RIGHT;
 
 
 visibility: PUBLIC | PRIVATE  | %empty ;

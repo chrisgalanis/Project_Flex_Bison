@@ -96,10 +96,11 @@ member_access: VAR_NAME DOT VAR_NAME ; //End Class Instance
 // Note Fix Visibility
 // !! Assignement Επιπλέον, η σύνθετη παράσταση μπορεί να είναι οποιαδήποτε αριθμητική παράσταση που περιλαμβάνει τις πράξεις +, -, *, /.  
 //expressions
+
 variable_assignment:  VAR_NAME EQUAL_SIGN expression;
 expression: expression PLUS term |expression MINUS term |  BRACKET_LEFT expression  BRACKET_RIGHT | term  ;
 term:  term MULTIPLY id | term DIVIDE id | BRACKET_LEFT term BRACKET_RIGHT | BRACKET_LEFT expression BRACKET_RIGHT | id  ;
-id: variable_value  | VAR_NAME |  BRACKET_LEFT id  BRACKET_RIGHT;
+id: variable_value  | VAR_NAME |  BRACKET_LEFT id  BRACKET_RIGHT | BRACKET_LEFT expression BRACKET_RIGHT;
 
 //My kostas branch
 /*variable_assignment:  VAR_NAME EQUAL_SIGN variable_value {printf("\nVariable  assign is identified\n");};
