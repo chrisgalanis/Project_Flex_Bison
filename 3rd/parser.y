@@ -7,6 +7,8 @@
     int yylex();
     void yyerror(const char *s);
 
+    int var_counter = 0;
+
 
 
     typedef struct variable
@@ -24,8 +26,8 @@
     {
         printf("Creating variable:: ");
         variable *v = (variable *)malloc(sizeof(variable));
-        v->name = name;
-        v->type = type;
+        v->name = strdup(name); // strdup is used to copy the string
+        v->type = type; 
         // v->value = value;
         v->visibility = visibility;
         return v;
@@ -87,9 +89,20 @@
         }
     }
 
+    void fix_visibility(int count, int visibility)
+    {
+        while (count != 0)
+        {
+            stack[top - 1 - count]->visibility = visibility;
+            count --;
+        }
+        print_stack();
+        count = 0;
+    }
+
 %}
 
-// Declare the types oftokens that will be used in the grammar
+// Declare the types of tokens that will be used in the grammar
 %union
 {
     int ival;
@@ -111,6 +124,11 @@
 %token COMMA
 %token DOT  
 
+%token PLUS
+%token MINUS
+%token MULTIPLY
+%token DIVIDE
+
 // Class Identifier
 %token <sval> PUBLIC
 %token <sval> PRIVATE
@@ -121,6 +139,8 @@
 %token NEW
 
 // Loop Identifiers
+%token IF
+%token ELSE
 %token FOR
 %token DO
 %token WHILE
@@ -138,6 +158,12 @@
 %token RETURN
 
 //Variable Types
+%type <sval> int_init;
+%type <sval> double_init;
+%type <sval> char_init;
+%type <sval> bool_init;
+%type <sval> string_init;
+
 %type <sval> variable_assignment
 %type <sval> variable_type
 %token <sval> VAR_NAME
@@ -162,34 +188,59 @@
 
 %%
 
-program: %empty | class_identifier ;
+program: %empty | class_identifier program;
 
 // Class Identifier of Only One Class
 class_identifier: PUBLIC CLASS CLASS_NAME CURLY_BRACKET_LEFT class_body CURLY_BRACKET_RIGHT {printf("\nClass is identified\n");};
 
 
-// Double Check if class members before of functions
+// !! Double Check if class members before of functions
 class_body: %empty |  functions class_body
-	               |  class_members class_body ;
+	               |  class_members class_body
+                   |  class_identifier class_body;
 	        
-class_members:  variable_initialization SEMICOLON |  variable_assignment SEMICOLON;
-
+class_members:   variable_initialization SEMICOLON |   variable_assignment SEMICOLON | member_access SEMICOLON;
 // For the 2nd Version we need to recognise: int var = INT_Number exc.
-variable_initialization:  visibility variable_type VAR_NAME  ;
 
 
 visibility:  %empty { $$ = 0; } | PUBLIC { $$ = 1; } | PRIVATE { $$ = 0; } ;
-variable_assignment: visibility variable_type VAR_NAME EQUAL_SIGN variable_value { 
-                                                                                    variable_initiliazation($1, $2, $3);
-                                                                                 } 
 
 
-variable_value:  INT_VALUE | CHAR_VALUE | DOUBLE_VALUE | BOOLEAN_VALUE | STRING_VALUE ;
+variable_initialization:  visibility  INT  int_init next_int {variable_initiliazation($1,"int",$3); fix_visibility(var_counter, $1);} |
+                          visibility  DOUBLE  double_init next_double { variable_initiliazation($1,"double",$3); }|
+                          visibility  CHAR char_init next_char   { variable_initiliazation($1,"char",$3); }   |
+                          visibility  BOOLEAN  bool_init next_bool  { variable_initiliazation($1,"boolean",$3);} |
+                          visibility  STRING  string_init next_string { variable_initiliazation($1,"String",$3);};
+
+next_int: %empty    | COMMA int_init next_int {variable_initiliazation(0,"int",$2); var_counter ++; };
+next_double: %empty | COMMA double_init next_double;
+next_char: %empty   | COMMA char_init next_char;
+next_bool: %empty   | COMMA bool_init next_bool;
+next_string: %empty | COMMA string_init next_string;
+
+int_init: VAR_NAME {$$ = $1;}   | VAR_NAME EQUAL_SIGN INT_VALUE {printf("int %s = %d",$1,$3); $$ = $1;};
+double_init: VAR_NAME {$$ = $1;} | VAR_NAME EQUAL_SIGN DOUBLE_VALUE {printf("double %s = %f",$1,$3); $$ = $1;};
+char_init: VAR_NAME  {$$ = $1;} | VAR_NAME EQUAL_SIGN CHAR_VALUE {printf("char %s = '%c'",$1,$3); $$ = $1;};
+bool_init: VAR_NAME   {$$ = $1;}| VAR_NAME EQUAL_SIGN BOOLEAN_VALUE {printf("bool %s = %s",$1,$3); $$ = $1;};
+string_init: VAR_NAME {$$ = $1;}| VAR_NAME EQUAL_SIGN STRING_VALUE {printf("char* %s = %s",$1,$3); $$ = $1;} ;
+
+// This is NEW
+variable_assignment:  VAR_NAME EQUAL_SIGN expression 
+;
+expression: expression PLUS term |expression MINUS term |  BRACKET_LEFT expression  BRACKET_RIGHT | term  ;
+term:  term MULTIPLY id | term DIVIDE id | BRACKET_LEFT term BRACKET_RIGHT | BRACKET_LEFT expression BRACKET_RIGHT | id  ;
+id: variable_value  | VAR_NAME |  BRACKET_LEFT id  BRACKET_RIGHT | BRACKET_LEFT expression BRACKET_RIGHT;
+
+
+
 variable_type: INT { $$ = "int"; }  
               |DOUBLE { $$ = "double";}
               |CHAR { $$ = "char";}
               |BOOLEAN {$$ = "boolean";}
               |STRING {$$ = "String";};
+
+variable_value:  INT_VALUE | CHAR_VALUE | DOUBLE_VALUE | BOOLEAN_VALUE | STRING_VALUE ;
+
 //Class Instance
 class_instance: CLASS_NAME VAR_NAME EQUAL_SIGN NEW CLASS_NAME BRACKET_LEFT BRACKET_RIGHT ;
 member_access: VAR_NAME DOT VAR_NAME ; //End Class Instance
