@@ -89,7 +89,7 @@ program: %empty | class_identifier program;
 class_identifier: PUBLIC CLASS CLASS_NAME CURLY_BRACKET_LEFT class_body CURLY_BRACKET_RIGHT {printf("\nClass is identified\n");};
 
 
-// Double Check if class members before of functions
+// !! Double Check if class members before of functions
 class_body: %empty |  functions class_body
 	               |  class_members class_body
                    |  class_identifier class_body;

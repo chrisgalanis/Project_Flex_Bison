@@ -117,3 +117,30 @@ public class  Ab {
 }
 
 ------------------------------------
+
+public class  Ab 
+{
+   int xs;
+    xs = (a - (5 / (4)));
+	int a,b,c;
+	double d = 0.0d, e = 90.6d , f = 98.00066d;
+    char a = 'a', b = 'b', c;
+    public void sandwitch()
+    {
+        if ( a )
+	{
+
+        }
+        else if ( b )
+        {
+
+        }
+        else 
+        {
+
+        }
+	return;
+    }
+
+}
+

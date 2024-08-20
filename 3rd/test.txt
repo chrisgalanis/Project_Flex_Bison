@@ -1,20 +1,14 @@
 public class  Ab {
     public int x = 5, x2 = 10, x3 = 15;
-    public int x4 = 6, x6 = 15;
-    //char y = 'n', ;
-    //String z = "adsaSajsdg gasdj ",zoo = "girrafes and hippos", meow , cat = "meow";
-    //boolean t = true;
-
-  /*  private void agguri(){
-       
-        for(int i = 3; i != 3 ; i+=2)
+ 
+    public int sandwitch()
+    {
+        for (int i = 0; i < 10; i ++)
         {
-            int a = 4;
-            Ab b = new Ab();
+            
         }
-       
+     
+	    return;
     }
-*/
-
 }
 

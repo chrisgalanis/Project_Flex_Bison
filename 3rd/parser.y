@@ -10,7 +10,6 @@
     int var_counter = 0;
 
 
-
     typedef struct variable
     {
         char *name;
@@ -19,8 +18,89 @@
         int visibility;
     } variable; 
 
+    typedef struct function
+    {
+        char *name;
+        char *return_type;
+        int visibility;  
+    } function;
+
     variable * stack[100];
-    int top = 0;
+    function * functions[100];
+
+    int top_var = 0;
+    int top_func = 0;
+    
+    
+    /* Functions Recognition */ 
+
+    function * create_function(int visibility, char *return_type, char *name)
+    {
+        function *v = (function *)malloc(sizeof(function));
+        v->name = strdup(name); // strdup is used to copy the string
+        v->return_type = return_type; 
+        v->visibility = visibility;
+        return v;
+    }
+
+    void print_function(function *f)
+    {
+        printf("Name: %s, Return Type: %s, Visibility: %d\n", f->name, f->return_type, f->visibility);
+    }
+
+    void print_stack_functions()
+    {
+        for(int i = 0; i < top_func; i++)
+        {
+        printf("Name: %s, Return Type: %s, Visibility: %d\n", functions[i]->name, functions[i]->return_type,  functions[i]->visibility);
+        }
+    }
+
+    int find_functions(char *name)
+    {
+        for(int i = 0; i < top_func; i++)
+        {
+            if(strcmp(functions[i]->name, name) == 0)
+            {
+                print_function(functions[i]);
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    void push_function(function *v)
+    {
+        functions[top_func++] = v;
+    }
+
+    function * pop_function()
+    {
+        return functions[--top_func];
+    }
+    
+
+    void function_initiliazation(int visibility , char *return_type, char *name)
+    {
+        if (find_functions(name) > 0)
+        {   
+            char *msg;
+            yyerror("Variable has been initialized");
+            printf("!!! Variable: %s has been initialized with type: %s !!!\n", name, return_type);
+            exit(0);
+        }
+        else
+        {
+            function* var = create_function(visibility, return_type, name); 
+            print_function(var);
+            push_function(var);
+            print_stack_functions();
+        }
+    }
+    
+   
+    
+     /* Variables Recognition */ 
 
     variable * create_variable(int visibility, char *type, char *name)
     {
@@ -33,33 +113,37 @@
         return v;
     }
 
-    void push(variable *v)
+    void push_var(variable *v)
     {
-        stack[top++] = v;
+        stack[top_var++] = v;
     }
 
-    variable *pop()
+    variable *pop_var()
     {
-        return stack[--top];
+        return stack[--top_var];
     }
 
-    void print_stack()
+    void print_stack_variable()
     {
         printf("Stack:\n");
-        for(int i = 0; i < top; i++)
+        for(int i = 0; i < top_var; i++)
         {
             printf("Name: %s, Type: %s, Value: %s, Visibility: %d\n", stack[i]->name, stack[i]->type, stack[i]->value, stack[i]->visibility);
         }
     }
+
 
     void print_variable(variable *v)
     {
         printf("Name: %s, Type: %s, Value: %s, Visibility: %d\n", v->name, v->type, v->value, v->visibility);
     }
 
+
+
+    
     int find_variable(char *name)
     {
-        for(int i = 0; i < top; i++)
+        for(int i = 0; i < top_var; i++)
         {
             if(strcmp(stack[i]->name, name) == 0)
             {
@@ -84,8 +168,8 @@
         {
             variable* var = create_variable(visibility, type, name); 
             print_variable(var);
-            push(var);
-            print_stack();
+            push_var(var);
+            print_stack_variable();
         }
     }
 
@@ -93,10 +177,10 @@
     {
         while (count != 0)
         {
-            stack[top - 1 - count]->visibility = visibility;
+            stack[top_var - 1 - count]->visibility = visibility;
             count --;
         }
-        print_stack();
+        print_stack_variable();
         count = 0;
     }
 
@@ -166,6 +250,11 @@
 
 %type <sval> variable_assignment
 %type <sval> variable_type
+
+
+// Function Type
+%type <ival> function_visibility;
+
 %token <sval> VAR_NAME
 %token <sval> VOID
 %token <sval> INT
@@ -196,21 +285,21 @@ class_identifier: PUBLIC CLASS CLASS_NAME CURLY_BRACKET_LEFT class_body CURLY_BR
 
 // !! Double Check if class members before of functions
 class_body: %empty |  functions class_body
-	               |  class_members class_body
+	               |  class_members class_body // intitalisation class_body
                    |  class_identifier class_body;
 	        
 class_members:   variable_initialization SEMICOLON |   variable_assignment SEMICOLON | member_access SEMICOLON;
 // For the 2nd Version we need to recognise: int var = INT_Number exc.
 
-
+//initialisation: variable_init | function_init;
 visibility:  %empty { $$ = 0; } | PUBLIC { $$ = 1; } | PRIVATE { $$ = 0; } ;
 
 
 variable_initialization:  visibility  INT  int_init next_int {variable_initiliazation($1,"int",$3); fix_visibility(var_counter, $1);} |
-                          visibility  DOUBLE  double_init next_double { variable_initiliazation($1,"double",$3); }|
-                          visibility  CHAR char_init next_char   { variable_initiliazation($1,"char",$3); }   |
-                          visibility  BOOLEAN  bool_init next_bool  { variable_initiliazation($1,"boolean",$3);} |
-                          visibility  STRING  string_init next_string { variable_initiliazation($1,"String",$3);};
+                          visibility  DOUBLE  double_init next_double { variable_initiliazation($1,"double",$3);  fix_visibility(var_counter, $1); }|
+                          visibility  CHAR char_init next_char   { variable_initiliazation($1,"char",$3);  fix_visibility(var_counter, $1);}   |
+                          visibility  BOOLEAN  bool_init next_bool  { variable_initiliazation($1,"boolean",$3);  fix_visibility(var_counter, $1);} |
+                          visibility  STRING  string_init next_string { variable_initiliazation($1,"String",$3);  fix_visibility(var_counter, $1);};
 
 next_int: %empty    | COMMA int_init next_int {variable_initiliazation(0,"int",$2); var_counter ++; };
 next_double: %empty | COMMA double_init next_double;
@@ -225,8 +314,7 @@ bool_init: VAR_NAME   {$$ = $1;}| VAR_NAME EQUAL_SIGN BOOLEAN_VALUE {printf("boo
 string_init: VAR_NAME {$$ = $1;}| VAR_NAME EQUAL_SIGN STRING_VALUE {printf("char* %s = %s",$1,$3); $$ = $1;} ;
 
 // This is NEW
-variable_assignment:  VAR_NAME EQUAL_SIGN expression 
-;
+variable_assignment:  VAR_NAME EQUAL_SIGN expression ;
 expression: expression PLUS term |expression MINUS term |  BRACKET_LEFT expression  BRACKET_RIGHT | term  ;
 term:  term MULTIPLY id | term DIVIDE id | BRACKET_LEFT term BRACKET_RIGHT | BRACKET_LEFT expression BRACKET_RIGHT | id  ;
 id: variable_value  | VAR_NAME |  BRACKET_LEFT id  BRACKET_RIGHT | BRACKET_LEFT expression BRACKET_RIGHT;
@@ -245,57 +333,69 @@ variable_value:  INT_VALUE | CHAR_VALUE | DOUBLE_VALUE | BOOLEAN_VALUE | STRING_
 class_instance: CLASS_NAME VAR_NAME EQUAL_SIGN NEW CLASS_NAME BRACKET_LEFT BRACKET_RIGHT ;
 member_access: VAR_NAME DOT VAR_NAME ; //End Class Instance
 
-// Functions
-functions: visibility VOID VAR_NAME BRACKET_LEFT arguments BRACKET_RIGHT CURLY_BRACKET_LEFT inside_void_function CURLY_BRACKET_RIGHT 
-         | visibility variable_type VAR_NAME BRACKET_LEFT arguments BRACKET_RIGHT CURLY_BRACKET_LEFT inside_function CURLY_BRACKET_RIGHT  {printf("\n Function is identified \n\n");};
 
+// Functions
+functions: function_visibility VOID VAR_NAME BRACKET_LEFT arguments BRACKET_RIGHT CURLY_BRACKET_LEFT inside_void_function CURLY_BRACKET_RIGHT  {function_initiliazation($1,"void",$3);}
+         | function_visibility variable_type VAR_NAME BRACKET_LEFT arguments BRACKET_RIGHT CURLY_BRACKET_LEFT inside_function CURLY_BRACKET_RIGHT  {function_initiliazation($1,$2,$3); printf("\n Function is identified\n");};
+function_visibility: PRIVATE {$$ = 0;} | PUBLIC { $$ = 1;};
 
 arguments : %empty | parameters
-parameters: variable_type VAR_NAME arguments_end {
-                                                    variable_initiliazation(0, $1, $2);
-                                                 }; 
+parameters: variable_type VAR_NAME arguments_end
 arguments_end : %empty | COMMA parameters 
 
 inside_void_function: inside_brackets | inside_brackets RETURN SEMICOLON ;
-inside_function: inside_brackets  RETURN VAR_NAME SEMICOLON  { if (find_variable($3) > 0) printf("Variable: %s has been initialized \n", $3); else printf("Variable: %s has NOT been initialized \n", $3);} | inside_brackets RETURN variable_value SEMICOLON ;
+inside_function: inside_brackets  RETURN VAR_NAME SEMICOLON  | inside_brackets RETURN variable_value SEMICOLON ;
 // End Functions
 
-inside_brackets: %empty | loops_n_condition inside_brackets ;
-loops_n_condition: for_statement | switch | do_while | variable_initialization  SEMICOLON | variable_assignment SEMICOLON | class_instance SEMICOLON  |member_access SEMICOLON ; // + Δήλωση Μεταβλητών
+
+inside_brackets: %empty | loops_n_condition inside_brackets | variable_assignment SEMICOLON ;
+
+
+
+loops_n_condition: for_statement | switch | do_while | if | variable_initialization  SEMICOLON | variable_assignment SEMICOLON | class_instance SEMICOLON  |member_access SEMICOLON ; // + Δήλωση Μεταβλητών
 
 // For Loop
 for_statement:  FOR BRACKET_LEFT for_condition BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT  {printf("\n For is identified\n");};
 for_condition:  for_variable SEMICOLON for_comparison SEMICOLON for_step ;
 
-for_variable: %empty | variable_assignment ;
+for_variable: %empty | variable_type VAR_NAME EQUAL_SIGN variable_value  ;
 
-for_comparison: %empty | VAR_NAME CONDITION_SYMBOL comparison_value bool_operator { if (find_variable($1) > 0) printf("Variable: %s has been initialized \n", $1); else printf("Variable: %s has NOT been initialized \n", $1);};
-comparison_value: INT_VALUE | DOUBLE_VALUE | CHAR_VALUE | BOOLEAN_VALUE | VAR_NAME { if (find_variable($1) > 0) printf("Variable: %s has been initialized \n", $1); else printf("Variable: %s has NOT been initialized \n", $1);};
-bool_operator:  %empty | BOOL_SYMBOL for_comparison;
+for_comparison: %empty | VAR_NAME CONDITION_SYMBOL comparison_value for_bool_operator;
+comparison_value: INT_VALUE | DOUBLE_VALUE | CHAR_VALUE | BOOLEAN_VALUE | VAR_NAME ;
+for_bool_operator:  %empty | BOOL_SYMBOL for_comparison;
 
-for_step : %empty | VAR_NAME step { if (find_variable($1) > 0) printf("Variable: %s has been initialized\n", $1); else printf("Variable: %s has NOT been initialized \n", $1);};
+for_step : %empty | VAR_NAME step ;
 step: INCREAMENT_DECREAMENT | LOOP_STEP step_value;
 step_value: INT_VALUE | DOUBLE_VALUE ;
 // End For Loop
 
 // DO While Loop 
-do_while: DO CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT  WHILE BRACKET_LEFT do_condition BRACKET_RIGHT SEMICOLON {printf("\n Do While is identified \n\n");};
-do_condition: operand CONDITION_SYMBOL operand | BOOLEAN_VALUE;
-operand: VAR_NAME { if (find_variable($1) > 0) printf("Variable: %s has been initialized \n", $1); else printf("Variable: %s has NOT been initialized \n", $1);} | INT_VALUE | DOUBLE_VALUE | CHAR_VALUE | BOOLEAN_VALUE ;
+do_while: DO CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT  WHILE BRACKET_LEFT do_condition BRACKET_RIGHT SEMICOLON {printf("\n Do While is identified\n");};
+do_condition: operand CONDITION_SYMBOL operand do_bool_operator| BOOLEAN_VALUE | VAR_NAME;
+do_bool_operator: %empty | BOOL_SYMBOL do_condition;
+operand: VAR_NAME | INT_VALUE | DOUBLE_VALUE | CHAR_VALUE | BOOLEAN_VALUE ;
 // End While Loopo
 
-
-
 // Switch  
-switch: SWITCH BRACKET_LEFT VAR_NAME BRACKET_RIGHT CURLY_BRACKET_LEFT case default CURLY_BRACKET_RIGHT { if (find_variable($3) > 0) printf("Variable: %s has been initialized \n", $3); else printf("Variable: %s has NOT been initialized \n", $3);printf("\n Switch\n");};
+switch: SWITCH BRACKET_LEFT VAR_NAME BRACKET_RIGHT CURLY_BRACKET_LEFT case default CURLY_BRACKET_RIGHT {printf("\n Switch\n");};
 case: CASE switch_value COLON switch_content case
       |%empty
 
 switch_value: INT_VALUE | CHAR_VALUE ;
-switch_content: %empty | inside_brackets BREAK;
+switch_content: %empty | /*ACTUAL CONTENT*/ BREAK SEMICOLON;
 
 default: DEFAULT COLON switch_content ;
          |%empty
+         
+// End Switch
+
+// IF 
+if: IF BRACKET_LEFT if_condition BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT else_if{printf("\n If is identified\n");};
+else_if: %empty | ELSE IF BRACKET_LEFT if_condition BRACKET_RIGHT CURLY_BRACKET_LEFT  inside_brackets CURLY_BRACKET_RIGHT else_if {printf("else if \n");} | else {printf("\n If is identified\n");};
+else: ELSE CURLY_BRACKET_LEFT  inside_brackets CURLY_BRACKET_RIGHT {printf("\n Else is identified\n");};     
+if_condition: operand  CONDITION_SYMBOL operand if_bool_operator| BOOLEAN_VALUE | VAR_NAME {printf("\n If Condition is identified\n");};
+if_bool_operator: %empty | BOOL_SYMBOL if_condition;
+
          
 // End Switch
             

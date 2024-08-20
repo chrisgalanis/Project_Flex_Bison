@@ -66,6 +66,7 @@ PRIVATE "private"
 {VOID} {return VOID;}
 {INT} {return INT;}
 {CHAR} {return CHAR;}
+{STRING} {return STRING;}
 {DOUBLE} {return DOUBLE;}
 {BOOLEAN} {return BOOLEAN;}
 
@@ -77,6 +78,7 @@ PRIVATE "private"
 
 
 [+|-]?[0-9]+ { yylval.ival = atoi(yytext); return INT_VALUE;}
+[+|-]?[0-9]+[.][0-9]+[d] { yytext[yyleng - 1] = '\0'; yylval.dval = strtod(yytext, NULL); return DOUBLE_VALUE;}
 ['][ -~]?['] { yylval.cval = yytext[1]; return CHAR_VALUE;}
 ["][ -~]+["] { yylval.sval = strdup(yytext); return STRING_VALUE;}
 {TRUE}|{FALSE} { yylval.sval = strdup(yytext); return BOOLEAN_VALUE;}
