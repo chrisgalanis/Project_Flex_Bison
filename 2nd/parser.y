@@ -61,7 +61,9 @@ void yyerror(const char *s);
 %token RETURN
 
 //Variable Types
-%token <sval> VAR_NAME
+%type <sval> VAR_NAME
+
+%token <sval> IDENT
 %token VOID
 %token INT
 %token CHAR
@@ -94,8 +96,9 @@ class_body: %empty |  functions class_body
 	               |  class_members class_body
                    |  class_identifier class_body;
 	        
-class_members:  visibility  variable_initialization SEMICOLON |   variable_assignment SEMICOLON | member_access SEMICOLON;
+class_members:  visibility  variable_initialization SEMICOLON |   variable_assignment SEMICOLON | member_access SEMICOLON | class_instance SEMICOLON ;
 
+VAR_NAME : IDENT | CLASS_NAME;
 
 // For the 2nd Version we need to recognise: int var = INT_Number exc.
 /* variable_declaration: variable_type VAR_NAME next;

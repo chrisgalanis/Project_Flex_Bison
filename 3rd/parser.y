@@ -9,14 +9,22 @@
 
     int var_counter = 0;
 
+    typedef struct var_value
+    {
+        int itemp;
+        double dtemp;
+        char ctemp;
+        char *stemp;
+    } var_value;
 
     typedef struct variable
     {
         char *name;
         char *type;
-        char *value;
         int visibility;
+        var_value value;
     } variable; 
+
 
     typedef struct function
     {
@@ -30,14 +38,16 @@
 
     int top_var = 0;
     int top_func = 0;
+    int top_value = 0;
     
+    var_value temp[100];
     
     /* Functions Recognition */ 
 
     function * create_function(int visibility, char *return_type, char *name)
     {
         function *v = (function *)malloc(sizeof(function));
-        v->name = strdup(name); // strdup is used to copy the string
+        v->name = name; // strdup is used to copy the string
         v->return_type = return_type; 
         v->visibility = visibility;
         return v;
@@ -102,13 +112,13 @@
     
      /* Variables Recognition */ 
 
-    variable * create_variable(int visibility, char *type, char *name)
+    variable * create_variable(int visibility, char *type, char *name, var_value value)
     {
         printf("Creating variable:: ");
         variable *v = (variable *)malloc(sizeof(variable));
-        v->name = strdup(name); // strdup is used to copy the string
+        v->name = name; // strdup is used to copy the string
         v->type = type; 
-        // v->value = value;
+        v->value = value;
         v->visibility = visibility;
         return v;
     }
@@ -128,14 +138,14 @@
         printf("Stack:\n");
         for(int i = 0; i < top_var; i++)
         {
-            printf("Name: %s, Type: %s, Value: %s, Visibility: %d\n", stack[i]->name, stack[i]->type, stack[i]->value, stack[i]->visibility);
+            printf("Name: %s, Type: %s, Value: %d, Visibility: %d \n", stack[i]->name, stack[i]->type,  stack[i]->value.itemp, stack[i]->visibility);  
         }
     }
 
 
     void print_variable(variable *v)
     {
-        printf("Name: %s, Type: %s, Value: %s, Visibility: %d\n", v->name, v->type, v->value, v->visibility);
+        printf("Name: %s, Type: %s, Value: %d, Visibility: %d \n", v->name, v->type, v->value.itemp , v->visibility);
     }
 
 
@@ -155,7 +165,7 @@
     }
 
 
-    void variable_initiliazation(int visibility , char *type, char *name)
+    void variable_initiliazation(int visibility , char *type, char *name, var_value value)
     {
         if (find_variable(name) > 0)
         {   
@@ -166,22 +176,26 @@
         }
         else
         {
-            variable* var = create_variable(visibility, type, name); 
+            variable* var = create_variable(visibility, type, name, value); 
             print_variable(var);
             push_var(var);
-            print_stack_variable();
+            
         }
     }
 
-    void fix_visibility(int count, int visibility)
+    void fix_visibility_n_value(int count, int visibility)
     {
-        while (count != 0)
+       
+        while (count >=  0)
         {
             stack[top_var - 1 - count]->visibility = visibility;
+            stack[top_var - 1 - count]->value = temp[top_value - 1];
             count --;
+            top_value --;
         }
         print_stack_variable();
         count = 0;
+
     }
 
 %}
@@ -242,6 +256,8 @@
 %token RETURN
 
 //Variable Types
+%type <sval> VAR_NAME;
+
 %type <sval> int_init;
 %type <sval> double_init;
 %type <sval> char_init;
@@ -255,7 +271,7 @@
 // Function Type
 %type <ival> function_visibility;
 
-%token <sval> VAR_NAME
+%token <sval> IDENT
 %token <sval> VOID
 %token <sval> INT
 %token <sval> CHAR
@@ -271,7 +287,7 @@
 %token <sval> BOOLEAN_VALUE
 %token <sval> STRING_VALUE
 
-
+%glr-parser // For handling the problem of LR(1) grammar
 
 %start program
 
@@ -288,30 +304,36 @@ class_body: %empty |  functions class_body
 	               |  class_members class_body // intitalisation class_body
                    |  class_identifier class_body;
 	        
-class_members:   variable_initialization SEMICOLON |   variable_assignment SEMICOLON | member_access SEMICOLON;
+class_members:   variable_initialization SEMICOLON |   variable_assignment SEMICOLON | member_access SEMICOLON | class_instance SEMICOLON ;
+
+//Class Instance
+class_instance: CLASS_NAME IDENT EQUAL_SIGN NEW CLASS_NAME BRACKET_LEFT BRACKET_RIGHT ;
+member_access: IDENT DOT IDENT ; //End Class Instance
+
+VAR_NAME : IDENT | CLASS_NAME;
 // For the 2nd Version we need to recognise: int var = INT_Number exc.
 
 //initialisation: variable_init | function_init;
 visibility:  %empty { $$ = 0; } | PUBLIC { $$ = 1; } | PRIVATE { $$ = 0; } ;
 
 
-variable_initialization:  visibility  INT  int_init next_int {variable_initiliazation($1,"int",$3); fix_visibility(var_counter, $1);} |
-                          visibility  DOUBLE  double_init next_double { variable_initiliazation($1,"double",$3);  fix_visibility(var_counter, $1); }|
-                          visibility  CHAR char_init next_char   { variable_initiliazation($1,"char",$3);  fix_visibility(var_counter, $1);}   |
-                          visibility  BOOLEAN  bool_init next_bool  { variable_initiliazation($1,"boolean",$3);  fix_visibility(var_counter, $1);} |
-                          visibility  STRING  string_init next_string { variable_initiliazation($1,"String",$3);  fix_visibility(var_counter, $1);};
+variable_initialization:  visibility  INT  int_init next_int {variable_initiliazation($1,"int",$3, temp[top_value - 1]); fix_visibility_n_value(var_counter, $1); } |
+                          visibility  DOUBLE  double_init next_double { variable_initiliazation($1,"double",$3, temp[top_value]);  fix_visibility_n_value(var_counter, $1); }|
+                          visibility  CHAR char_init next_char   { variable_initiliazation($1,"char",$3, temp[top_value]);  fix_visibility_n_value(var_counter, $1);}   |
+                          visibility  BOOLEAN  bool_init next_bool  { variable_initiliazation($1,"boolean",$3, temp[top_value]);  fix_visibility_n_value(var_counter, $1);} |
+                          visibility  STRING  string_init next_string { variable_initiliazation($1,"String",$3, temp[top_value]);  fix_visibility_n_value(var_counter, $1);};
 
-next_int: %empty    | COMMA int_init next_int {variable_initiliazation(0,"int",$2); var_counter ++; };
-next_double: %empty | COMMA double_init next_double;
-next_char: %empty   | COMMA char_init next_char;
-next_bool: %empty   | COMMA bool_init next_bool;
-next_string: %empty | COMMA string_init next_string;
+next_int: %empty    | COMMA int_init next_int {variable_initiliazation(0,"int",$2, temp[top_value]); var_counter ++; };
+next_double: %empty | COMMA double_init next_double {variable_initiliazation(0,"double",$2, temp[top_value]); var_counter ++;};
+next_char: %empty   | COMMA char_init next_char {variable_initiliazation(0,"char",$2, temp[top_value]); var_counter ++;};
+next_bool: %empty   | COMMA bool_init next_bool {variable_initiliazation(0,"boolean",$2, temp[top_value]); var_counter ++;};
+next_string: %empty | COMMA string_init next_string {variable_initiliazation(0,"String",$2, temp[top_value]); var_counter ++;};
 
-int_init: VAR_NAME {$$ = $1;}   | VAR_NAME EQUAL_SIGN INT_VALUE {printf("int %s = %d",$1,$3); $$ = $1;};
-double_init: VAR_NAME {$$ = $1;} | VAR_NAME EQUAL_SIGN DOUBLE_VALUE {printf("double %s = %f",$1,$3); $$ = $1;};
-char_init: VAR_NAME  {$$ = $1;} | VAR_NAME EQUAL_SIGN CHAR_VALUE {printf("char %s = '%c'",$1,$3); $$ = $1;};
-bool_init: VAR_NAME   {$$ = $1;}| VAR_NAME EQUAL_SIGN BOOLEAN_VALUE {printf("bool %s = %s",$1,$3); $$ = $1;};
-string_init: VAR_NAME {$$ = $1;}| VAR_NAME EQUAL_SIGN STRING_VALUE {printf("char* %s = %s",$1,$3); $$ = $1;} ;
+int_init: VAR_NAME {$$ = $1;}   | VAR_NAME EQUAL_SIGN INT_VALUE {printf("int %s = %d",$1,$3); $$ = $1; temp[top_value].itemp = $3; top_value++;};
+double_init: VAR_NAME {$$ = $1;} | VAR_NAME EQUAL_SIGN DOUBLE_VALUE {printf("double %s = %f",$1,$3); $$ = $1; temp[top_value].dtemp = $3;};
+char_init: VAR_NAME  {$$ = $1;} | VAR_NAME EQUAL_SIGN CHAR_VALUE {printf("char %s = '%c'",$1,$3); $$ = $1; temp[top_value].ctemp = $3;};
+bool_init: VAR_NAME   {$$ = $1;}| VAR_NAME EQUAL_SIGN BOOLEAN_VALUE {printf("bool %s = %s",$1,$3); $$ = $1; temp[top_value].stemp = $3;};
+string_init: VAR_NAME {$$ = $1;}| VAR_NAME EQUAL_SIGN STRING_VALUE {printf("char* %s = %s",$1,$3); $$ = $1; temp[top_value].stemp = $3;};
 
 // This is NEW
 variable_assignment:  VAR_NAME EQUAL_SIGN expression ;
@@ -329,9 +351,7 @@ variable_type: INT { $$ = "int"; }
 
 variable_value:  INT_VALUE | CHAR_VALUE | DOUBLE_VALUE | BOOLEAN_VALUE | STRING_VALUE ;
 
-//Class Instance
-class_instance: CLASS_NAME VAR_NAME EQUAL_SIGN NEW CLASS_NAME BRACKET_LEFT BRACKET_RIGHT ;
-member_access: VAR_NAME DOT VAR_NAME ; //End Class Instance
+
 
 
 // Functions

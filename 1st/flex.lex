@@ -79,10 +79,10 @@ PRIVATE "private"
 
 [+|-]?[0-9]+ {return INT_VALUE;}
 [+|-]?[0-9]+[.][0-9]+[d] {return DOUBLE_VALUE;}
-['][ -~]?['] {return CHAR_VALUE;}
+['](([ -~]?)|([\\][nt]?))['] {return CHAR_VALUE;}
 ["][ -~]*["] {return STRING_VALUE;}
 {TRUE}|{FALSE} {return BOOLEAN_VALUE;}
-[A-Za-z_][A-Za-z0-9_]* {printf("\nVAR NAME\n");return VAR_NAME;}
+[A-Za-z_][A-Za-z0-9_]* {printf("\nIDENT\n");return IDENT;}
 
 "//"([ -~	]+) {printf("\nCOMMENT\n");}
 "/*"([ -~   \n]+)"*/" {printf("\nCOMMENTS\n");}

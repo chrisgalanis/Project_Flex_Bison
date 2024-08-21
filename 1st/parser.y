@@ -51,7 +51,7 @@ void yyerror(const char *s);
 %token RETURN
 
 //Variable Types
-%token VAR_NAME
+%token IDENT
 %token VOID
 %token INT
 %token CHAR
@@ -66,6 +66,8 @@ void yyerror(const char *s);
 %token DOUBLE_VALUE
 %token BOOLEAN_VALUE
 %token STRING_VALUE
+
+%glr-parser // For handling the problem of LR(1) grammar
 
 %start program
 
@@ -82,16 +84,22 @@ class_body: %empty |  functions class_body
 	               |  class_members class_body
                    |  class_identifier class_body;
 	        
-class_members: variable_initialization SEMICOLON | variable_assignment SEMICOLON  | member_access SEMICOLON;
+class_members: variable_initialization SEMICOLON | variable_assignment SEMICOLON  | member_access SEMICOLON | class_instance SEMICOLON ;
+
+VAR_NAME : IDENT {printf("I");} | CLASS_NAME {printf("C");};
+
+//Class Instance
+class_instance: CLASS_NAME VAR_NAME EQUAL_SIGN NEW CLASS_NAME BRACKET_LEFT BRACKET_RIGHT ;
+member_access: IDENT DOT IDENT ; //End Class Instance
+
 
 variable_type: INT   
               |DOUBLE
               |CHAR
               |BOOLEAN
               |STRING ;
-//Class Instance
-class_instance: CLASS_NAME VAR_NAME EQUAL_SIGN NEW CLASS_NAME BRACKET_LEFT BRACKET_RIGHT ;
-member_access: VAR_NAME DOT VAR_NAME ; //End Class Instance
+
+
 
 // Note Fix Visibility
 // !! Assignement Επιπλέον, η σύνθετη παράσταση μπορεί να είναι οποιαδήποτε αριθμητική παράσταση που περιλαμβάνει τις πράξεις +, -, *, /.  

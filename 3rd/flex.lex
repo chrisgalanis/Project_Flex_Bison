@@ -79,10 +79,10 @@ PRIVATE "private"
 
 [+|-]?[0-9]+ { yylval.ival = atoi(yytext); return INT_VALUE;}
 [+|-]?[0-9]+[.][0-9]+[d] { yytext[yyleng - 1] = '\0'; yylval.dval = strtod(yytext, NULL); return DOUBLE_VALUE;}
-['][ -~]?['] { yylval.cval = yytext[1]; return CHAR_VALUE;}
+['](([ -~]?)|([\\][nt]?))['] {return CHAR_VALUE;}
 ["][ -~]+["] { yylval.sval = strdup(yytext); return STRING_VALUE;}
 {TRUE}|{FALSE} { yylval.sval = strdup(yytext); return BOOLEAN_VALUE;}
-[A-Za-z][A-Za-z0-9_]* { yylval.sval = strdup(yytext); printf("\nVAR NAME\n");return VAR_NAME;}
+[A-Za-z][A-Za-z0-9_]* { yylval.sval = strdup(yytext); printf("\nVAR NAME\n");return IDENT;}
 
 "//"([ -~	]+) {printf("\nCOMMENT\n");}
 "/*"([ -~   \n]+)"*/" {printf("\nCOMMENTS\n");}
