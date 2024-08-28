@@ -137,8 +137,8 @@ variable_type: INT
               |STRING ;
 //Class Instance
 class_instance: CLASS_NAME VAR_NAME EQUAL_SIGN NEW CLASS_NAME BRACKET_LEFT BRACKET_RIGHT ;
-member_access: VAR_NAME DOT VAR_NAME ; //End Class Instance
-
+member_access: VAR_NAME DOT VAR_NAME parenthesis; //End Class Instance
+parenthesis: %empty  | BRACKET_LEFT BRACKET_RIGHT;
 // Functions
 functions: function_visibility VOID VAR_NAME BRACKET_LEFT arguments BRACKET_RIGHT CURLY_BRACKET_LEFT inside_void_function CURLY_BRACKET_RIGHT 
          | function_visibility variable_type VAR_NAME BRACKET_LEFT arguments BRACKET_RIGHT CURLY_BRACKET_LEFT inside_function CURLY_BRACKET_RIGHT  {printf("\n Function is identified\n");};

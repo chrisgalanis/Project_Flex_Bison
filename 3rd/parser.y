@@ -39,6 +39,8 @@
     int top_var = 0;
     int top_func = 0;
     int top_value = 0;
+
+    int temp_val = 0;
     
     var_value temp[100];
     
@@ -164,6 +166,17 @@
         return -1;
     }
 
+    int  find_variable_type(char *name)
+    {
+        for(int i = 0; i < top_var; i++)
+        {
+            if(strcmp(stack[i]->name, name) == 0)
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
 
     void variable_initiliazation(int visibility , char *type, char *name, var_value value)
     {
@@ -222,10 +235,12 @@
 %token COMMA
 %token DOT  
 
-%token PLUS
-%token MINUS
-%token MULTIPLY
-%token DIVIDE
+//Operations
+%left  PLUS
+%left MINUS
+%left MULTIPLY
+%left DIVIDE
+%nonassoc UMINUS // Unary Minus , recognizing  negative numbers
 
 // Class Identifier
 %token <sval> PUBLIC
@@ -265,7 +280,9 @@
 %type <sval> string_init;
 
 %type <sval> variable_assignment
+%type <ival> variable_value
 %type <sval> variable_type
+%type <ival> expression
 
 
 // Function Type
@@ -308,8 +325,8 @@ class_members:   variable_initialization SEMICOLON |   variable_assignment SEMIC
 
 //Class Instance
 class_instance: CLASS_NAME IDENT EQUAL_SIGN NEW CLASS_NAME BRACKET_LEFT BRACKET_RIGHT ;
-member_access: IDENT DOT IDENT ; //End Class Instance
-
+member_access: IDENT DOT IDENT parenthesis; //End Class Instance
+parenthesis: %empty  | BRACKET_LEFT BRACKET_RIGHT;
 VAR_NAME : IDENT | CLASS_NAME;
 // For the 2nd Version we need to recognise: int var = INT_Number exc.
 
@@ -329,19 +346,56 @@ next_char: %empty   | COMMA char_init next_char {variable_initiliazation(0,"char
 next_bool: %empty   | COMMA bool_init next_bool {variable_initiliazation(0,"boolean",$2, temp[top_value]); var_counter ++;};
 next_string: %empty | COMMA string_init next_string {variable_initiliazation(0,"String",$2, temp[top_value]); var_counter ++;};
 
-int_init: VAR_NAME {$$ = $1;}   | VAR_NAME EQUAL_SIGN INT_VALUE {printf("int %s = %d",$1,$3); $$ = $1; temp[top_value].itemp = $3; top_value++;};
+int_init: VAR_NAME {$$ = $1;}   | VAR_NAME EQUAL_SIGN INT_VALUE {printf("int %s = %d",$1,$3); $$ = $1; temp[top_value].itemp = $3; top_value++;} | VAR_NAME EQUAL_SIGN expression {/* printf("int %s = %d",$1,$3); $$ = $1; temp[top_value].itemp = $3; top_value++; */};
 double_init: VAR_NAME {$$ = $1;} | VAR_NAME EQUAL_SIGN DOUBLE_VALUE {printf("double %s = %f",$1,$3); $$ = $1; temp[top_value].dtemp = $3;};
 char_init: VAR_NAME  {$$ = $1;} | VAR_NAME EQUAL_SIGN CHAR_VALUE {printf("char %s = '%c'",$1,$3); $$ = $1; temp[top_value].ctemp = $3;};
 bool_init: VAR_NAME   {$$ = $1;}| VAR_NAME EQUAL_SIGN BOOLEAN_VALUE {printf("bool %s = %s",$1,$3); $$ = $1; temp[top_value].stemp = $3;};
 string_init: VAR_NAME {$$ = $1;}| VAR_NAME EQUAL_SIGN STRING_VALUE {printf("char* %s = %s",$1,$3); $$ = $1; temp[top_value].stemp = $3;};
 
-// This is NEW
+/* // Variable Assignment FOR BNF //
 variable_assignment:  VAR_NAME EQUAL_SIGN expression ;
 expression: expression PLUS term |expression MINUS term |  BRACKET_LEFT expression  BRACKET_RIGHT | term  ;
 term:  term MULTIPLY id | term DIVIDE id | BRACKET_LEFT term BRACKET_RIGHT | BRACKET_LEFT expression BRACKET_RIGHT | id  ;
-id: variable_value  | VAR_NAME |  BRACKET_LEFT id  BRACKET_RIGHT | BRACKET_LEFT expression BRACKET_RIGHT;
+id: variable_value  | VAR_NAME |  BRACKET_LEFT id  BRACKET_RIGHT | BRACKET_LEFT expression BRACKET_RIGHT; */
+// End Variable Assignment FOR BNF //
+
+// This is Kostas'
+
+variable_assignment:  VAR_NAME EQUAL_SIGN expression { 
+
+    int  index = find_variable_type($1);
+    if ( index == -1 )
+    {
+        yyerror("Variable has not been initialized");
+        printf("!!! Variable: %s has not been initialized !!!\n", $1);
+        exit(0);
+    }
+    else
+    {
+       
+        
+        if (strcmp(stack[index]->type, "int") == 0)
+        {
+            stack[index]->value.itemp = $3;
+            printf("Variable: %s has been initialized with value: %d\n", $1, stack[index]->value.itemp);
+        }
+        else if (strcmp(stack[index]->type, "double") == 0)
+        {
+            stack[index]->value.dtemp = $3;
+            printf("Variable: %s has been initialized with value: %f \n", $1, stack[index]->value.dtemp);
+        }
+        else
+        {
+            yyerror("Variable is not an integer or double");
+        }
+
+    }
+ };
+expression: variable_value { $$ = $1 ;} | VAR_NAME {} | expression PLUS expression { $$ = $1 + $3 ; } | expression MINUS expression { $$ = $1 - $3; }| expression MULTIPLY expression { $$ = $1 * $3; }| 
+expression DIVIDE expression{ $$ = $1 / $3 ; } | BRACKET_LEFT expression BRACKET_RIGHT { $$ = $2; }| MINUS expression %prec UMINUS { $$ = -$2; } ;
 
 
+// This is the end of Kostas'
 
 variable_type: INT { $$ = "int"; }  
               |DOUBLE { $$ = "double";}
@@ -349,7 +403,7 @@ variable_type: INT { $$ = "int"; }
               |BOOLEAN {$$ = "boolean";}
               |STRING {$$ = "String";};
 
-variable_value:  INT_VALUE | CHAR_VALUE | DOUBLE_VALUE | BOOLEAN_VALUE | STRING_VALUE ;
+variable_value:  INT_VALUE { $$ = $1 ;} | CHAR_VALUE { $$ = 0 ;} | DOUBLE_VALUE { $$ = $1; } | BOOLEAN_VALUE { $$ = 0;} | STRING_VALUE { $$ = 0;} ;
 
 
 
