@@ -1,3 +1,4 @@
+
 %{
 
     #include <stdio.h>
@@ -561,4 +562,5 @@ int main(void)
 void yyerror(const char *s)
 {
     printf("Error: %s\n",s);
+
 }
