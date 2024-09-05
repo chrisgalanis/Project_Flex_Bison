@@ -56,9 +56,9 @@
     int parameter_count=0;
 
     
-    class* find_current_class(class* c){
-     if (c->count_child==0) return c;
-    else find_current_class(c->child[c->count_child-1]);
+    class* find_current_class(class* c,int level_counter){
+     if ( level_counter==class_level) return c;
+    else find_current_class(c->child[c->count_child-1],level_counter++);
    }
 
      /* Variables Recognition */ 
@@ -111,7 +111,7 @@
 
     void delete_function_vars()
     {
-        class* c=find_current_class(classes[top_class-1]);
+        class* c=find_current_class(classes[top_class-1],1);
         variable** vs=c->stack;
         int* top=& c->top_var;
 
@@ -129,7 +129,7 @@
 
     void variable_initiliazation(char* visibility , char *type, char *name)
     {
-        class* c=find_current_class(classes[top_class-1]);
+        class* c=find_current_class(classes[top_class-1],1);
         variable** vs=c->stack;
         int* top=& c->top_var;
         if (find_variable_initialize(vs,*top,name) != NULL)
@@ -149,7 +149,7 @@
     void arguement_initiliazation(char* visibility , char *type, char *name)
     {
         variable_initiliazation(visibility,type,name);
-        class* c=find_current_class(classes[top_class-1]);
+        class* c=find_current_class(classes[top_class-1],1);
         
         variable** vs=c->functions[c->top_func-1]->arg;
         int* top=&c->functions[c->top_func-1]->top_arg;
@@ -160,7 +160,7 @@
 
     void fix_visibility(char* visibility)
     {   
-        class* c=find_current_class(classes[top_class-1]);
+        class* c=find_current_class(classes[top_class-1],1);
         while (var_counter != 0)
         {
             c->stack[c->top_var - 1 - var_counter]->visibility =  strdup(visibility);
@@ -210,7 +210,7 @@
 
     void function_initiliazation( char* visibility , char *return_type, char *name)
     {
-        class *c =find_current_class(classes[top_class-1]);
+        class *c =find_current_class(classes[top_class-1],1);
         function** fs=c->functions;
         int* top=& c->top_func;
 
@@ -228,17 +228,19 @@
     }
 
     void check_parameter_type(char* name){
-        class* c=find_current_class(classes[top_class-1]);
+        class* c=find_current_class(classes[top_class-1],1);
         variable* v=find_variable_access(c->stack,c->top_var,name);
         if (v==NULL){
             yyerror("!!!Parameter has not been initialized!!!");
             exit(0);
         }
         function* f=c->functions[c->top_func-1];
+         printf("skata 3tted%d\n",f->top_arg);
         if( parameter_count>=f->top_arg){
             yyerror("!!!Too many parameters!!!");
             exit(0);
         }
+         printf("skata 4 spotted\n");
         if( strcmp(f->arg[parameter_count]->type, v->type) == 0){
             yyerror("Parameter type mismatch");
             printf("!!! Expected arguement type: %s instead of %s!!!\n",f->arg[parameter_count]->type,v-> type);
@@ -247,12 +249,15 @@
     }
 
     void check_parameter_count(){
-        class* c=find_current_class(classes[top_class-1]);
+        printf("skata spotted\n");
+        class* c=find_current_class(classes[top_class-1],1);
         function* f=c->functions[c->top_func-1];
-        if( parameter_count!=f->top_arg){
+        printf("skata spotted\n");
+        if( parameter_count != f->top_arg){
             yyerror("!!!Too few parameters!!!");
             exit(0);
         }
+        printf("skata spotted\n");
     }
 
 
@@ -265,10 +270,10 @@
         v->top_var=0;
         v->top_func=0;
         v->count_child=0;
-    
+       // v->parent=NULL;
         return v;
     }
-    //find_current_class(classes[top_class-1])
+    //find_current_class(classes[top_class-1],1)
 
      void print_class(class *c)
     {
@@ -314,13 +319,13 @@
     {   class** cl=classes;
         int* top=&top_class;
         
-        class** clone=cl;
-
+        class** parent_stack=cl;
+        int parent_top;
         if(class_level>0){
             for(int i=0;i<class_level;i++){
                 cl=cl[(*top)-1]->child;//set child stack as current stack
-                top=&(clone[(*top)-1]->count_child);//set child counter as current counter
-                clone=cl;//copy current class stack
+                top=&(parent_stack[(*top)-1]->count_child);//set child counter as current counter
+                parent_stack=cl;//copy current class stack
             }
         }
 
@@ -333,6 +338,7 @@
         else
         {
             class* c = create_class(visibility, name);
+            //if (class_level>0)c->parent=parent_stack[]
             
             push_class(cl,top,c);
         }
@@ -574,7 +580,7 @@ class_instance: CLASS_NAME VAR_NAME EQUAL_SIGN NEW CLASS_NAME BRACKET_LEFT BRACK
         printf("ERROR!!Invalid initiliazation of instance %s\n",$2);
     }
     };
-member_access: VAR_NAME DOT VAR_NAME {get_object_var($1,$3);} | VAR_NAME DOT function_call {get_object_func($1,$3);}; //End Class Instance
+member_access: VAR_NAME DOT VAR_NAME {get_object_var($1,$3);} | VAR_NAME DOT function_call {printf("func access\n");get_object_func($1,$3);}; //End Class Instance
 
 
 // Functions
@@ -593,9 +599,9 @@ inside_function: inside_brackets  RETURN VAR_NAME SEMICOLON{}  | inside_brackets
 
 function_call:  VAR_NAME BRACKET_LEFT parameters_start BRACKET_RIGHT {$$=$1;};
 
-parameters_start:%empty|parameters
+parameters_start:%empty{printf("no parameter\n");}|parameters{check_parameter_count();parameter_count=0;} 
 parameters: VAR_NAME parameters_end{printf("var name:%s\n",$1);check_parameter_type($1);parameter_count++;}|data_value parameters_end
-parameters_end:%empty{check_parameter_count();parameter_count=0;} 
+parameters_end:%empty
 |COMMA parameters
 
 // End Functions
