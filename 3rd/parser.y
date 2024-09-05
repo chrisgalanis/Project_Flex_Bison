@@ -13,7 +13,7 @@
     {
         int itemp;
         double dtemp;
-        char ctemp;
+        char* ctemp;
         char *stemp;
     } var_value;
 
@@ -43,6 +43,9 @@
     int temp_val = 0;
     
     var_value temp[100];
+
+    // Zero Value
+    var_value zero_temp = {0, 0.0, '\0', '\0'};
     
     /* Functions Recognition */ 
 
@@ -140,7 +143,7 @@
         printf("Stack:\n");
         for(int i = 0; i < top_var; i++)
         {
-            printf("Name: %s, Type: %s, Value: %d, Visibility: %d \n", stack[i]->name, stack[i]->type,  stack[i]->value.itemp, stack[i]->visibility);  
+            printf("Name: %s, Type: %s, Value: Int) %d  Char) %s  Double) %f String) %s  , Visibility: %d \n", stack[i]->name, stack[i]->type,  stack[i]->value.itemp, stack[i]->value.ctemp, stack[i]->value.dtemp, stack[i]->value.stemp ,stack[i]->visibility);  
         }
     }
 
@@ -178,7 +181,7 @@
         return -1;
     }
 
-    void variable_initiliazation(int visibility , char *type, char *name, var_value value)
+    void variable_initialization(int visibility , char *type, char *name)
     {
         if (find_variable(name) > 0)
         {   
@@ -189,7 +192,7 @@
         }
         else
         {
-            variable* var = create_variable(visibility, type, name, value); 
+            variable* var = create_variable(visibility, type, name, zero_temp); 
             print_variable(var);
             push_var(var);
             
@@ -207,7 +210,7 @@
             top_value --;
         }
         print_stack_variable();
-        count = 0;
+        var_counter = 0;
 
     }
 
@@ -217,7 +220,7 @@
 %union
 {
     int ival;
-    char cval;
+    char* cval;
     double dval;
     char *sval;
 
@@ -321,7 +324,7 @@ class_body: %empty |  functions class_body
 	               |  class_members class_body // intitalisation class_body
                    |  class_identifier class_body;
 	        
-class_members:   variable_initialization SEMICOLON |   variable_assignment SEMICOLON | member_access SEMICOLON | class_instance SEMICOLON ;
+class_members:   variable_initialization SEMICOLON |variable_declaration SEMICOLON |   variable_assignment SEMICOLON | member_access SEMICOLON | class_instance SEMICOLON ;
 
 //Class Instance
 class_instance: CLASS_NAME IDENT EQUAL_SIGN NEW CLASS_NAME BRACKET_LEFT BRACKET_RIGHT ;
@@ -333,24 +336,38 @@ VAR_NAME : IDENT | CLASS_NAME;
 //initialisation: variable_init | function_init;
 visibility:  %empty { $$ = 0; } | PUBLIC { $$ = 1; } | PRIVATE { $$ = 0; } ;
 
+variable_declaration:     visibility  INT  VAR_NAME dnext_int { temp[top_value++] = zero_temp; variable_initialization($1,"int",$3); fix_visibility_n_value(var_counter, $1); } |
+                          visibility  DOUBLE  VAR_NAME dnext_double {temp[top_value++] = zero_temp; variable_initialization($1,"double",$3);  fix_visibility_n_value(var_counter, $1); }|
+                          visibility  CHAR VAR_NAME dnext_char   {temp[top_value++] = zero_temp; variable_initialization($1,"char",$3);  fix_visibility_n_value(var_counter, $1);}   |
+                          visibility  BOOLEAN  VAR_NAME dnext_bool  {temp[top_value++] = zero_temp; variable_initialization($1,"boolean",$3);  fix_visibility_n_value(var_counter, $1);} |
+                          visibility  STRING  VAR_NAME dnext_string {temp[top_value++] = zero_temp; variable_initialization($1,"String",$3);  fix_visibility_n_value(var_counter, $1);};
 
-variable_initialization:  visibility  INT  int_init next_int {variable_initiliazation($1,"int",$3, temp[top_value - 1]); fix_visibility_n_value(var_counter, $1); } |
-                          visibility  DOUBLE  double_init next_double { variable_initiliazation($1,"double",$3, temp[top_value]);  fix_visibility_n_value(var_counter, $1); }|
-                          visibility  CHAR char_init next_char   { variable_initiliazation($1,"char",$3, temp[top_value]);  fix_visibility_n_value(var_counter, $1);}   |
-                          visibility  BOOLEAN  bool_init next_bool  { variable_initiliazation($1,"boolean",$3, temp[top_value]);  fix_visibility_n_value(var_counter, $1);} |
-                          visibility  STRING  string_init next_string { variable_initiliazation($1,"String",$3, temp[top_value]);  fix_visibility_n_value(var_counter, $1);};
+dnext_int: %empty    | COMMA VAR_NAME dnext_int {temp[top_value++] = zero_temp ; variable_initialization(0,"int",$2); var_counter++;}; 
+dnext_double: %empty | COMMA VAR_NAME dnext_double {temp[top_value++] = zero_temp; variable_initialization(0,"double",$2); var_counter++;};
+dnext_char: %empty   | COMMA VAR_NAME dnext_char {temp[top_value++] = zero_temp ; variable_initialization(0,"char",$2); var_counter++;};
+dnext_bool: %empty   | COMMA VAR_NAME dnext_bool {temp[top_value++] = zero_temp ; variable_initialization(0,"boolean",$2); var_counter++;};
+dnext_string: %empty | COMMA VAR_NAME dnext_string {temp[top_value++] = zero_temp ;  variable_initialization(0,"String",$2); var_counter++;};
 
-next_int: %empty    | COMMA int_init next_int {variable_initiliazation(0,"int",$2, temp[top_value]); var_counter ++; };
-next_double: %empty | COMMA double_init next_double {variable_initiliazation(0,"double",$2, temp[top_value]); var_counter ++;};
-next_char: %empty   | COMMA char_init next_char {variable_initiliazation(0,"char",$2, temp[top_value]); var_counter ++;};
-next_bool: %empty   | COMMA bool_init next_bool {variable_initiliazation(0,"boolean",$2, temp[top_value]); var_counter ++;};
-next_string: %empty | COMMA string_init next_string {variable_initiliazation(0,"String",$2, temp[top_value]); var_counter ++;};
 
-int_init: VAR_NAME {$$ = $1;}   |  VAR_NAME EQUAL_SIGN expression{printf("int %s = %d",$1,$3); $$ = $1; temp[top_value].itemp = $3; top_value++;}  /*{/* printf("int %s = %d",$1,$3); $$ = $1; temp[top_value].itemp = $3; top_value++; };*/
-double_init: VAR_NAME {$$ = $1;} | VAR_NAME EQUAL_SIGN DOUBLE_VALUE {printf("double %s = %f",$1,$3); $$ = $1; temp[top_value].dtemp = $3;};
-char_init: VAR_NAME  {$$ = $1;} | VAR_NAME EQUAL_SIGN CHAR_VALUE {printf("char %s = '%c'",$1,$3); $$ = $1; temp[top_value].ctemp = $3;};
-bool_init: VAR_NAME   {$$ = $1;}| VAR_NAME EQUAL_SIGN BOOLEAN_VALUE  {printf("bool %s = %s",$1,$3); $$ = $1; temp[top_value].stemp = $3;};
-string_init: VAR_NAME {$$ = $1;}| VAR_NAME EQUAL_SIGN STRING_VALUE  {printf("char* %s = %s",$1,$3); $$ = $1; temp[top_value].stemp = $3;};
+
+
+variable_initialization:  visibility  INT  int_init next_int {  variable_initialization($1,"int",$3); fix_visibility_n_value(var_counter, $1); } |
+                          visibility  DOUBLE  double_init next_double { variable_initialization($1,"double",$3);  fix_visibility_n_value(var_counter, $1); }|
+                          visibility  CHAR char_init next_char   { variable_initialization($1,"char",$3);  fix_visibility_n_value(var_counter, $1);}   |
+                          visibility  BOOLEAN  bool_init next_bool  { variable_initialization($1,"boolean",$3);  fix_visibility_n_value(var_counter, $1);} |
+                          visibility  STRING  string_init next_string { variable_initialization($1,"String",$3);  fix_visibility_n_value(var_counter, $1);};
+
+next_int: %empty    | COMMA int_init next_int {variable_initialization(0,"int",$2); var_counter ++; }; 
+next_double: %empty | COMMA double_init next_double {variable_initialization(0,"double",$2); var_counter ++;};
+next_char: %empty   | COMMA char_init next_char {variable_initialization(0,"char",$2); var_counter ++;};
+next_bool: %empty   | COMMA bool_init next_bool {variable_initialization(0,"boolean",$2); var_counter ++;};
+next_string: %empty | COMMA string_init next_string {variable_initialization(0,"String",$2); var_counter ++;};
+
+int_init: VAR_NAME EQUAL_SIGN expression{printf("int %s = %d",$1,$3); $$ = $1; temp[top_value++].itemp = $3; }  /*{/* printf("int %s = %d",$1,$3); $$ = $1; temp[top_value].itemp = $3; top_value++; };*/
+double_init:  VAR_NAME EQUAL_SIGN DOUBLE_VALUE {printf("double %s = %f",$1,$3); $$ = $1; temp[top_value++].dtemp = $3;};
+char_init:  VAR_NAME EQUAL_SIGN CHAR_VALUE {printf("char %s = %s",$1,$3); $$ = $1; temp[top_value++].ctemp = $3; };
+bool_init: VAR_NAME EQUAL_SIGN BOOLEAN_VALUE  {printf("bool %s = %s",$1,$3); $$ = $1; temp[top_value++].stemp = $3; };
+string_init:  VAR_NAME EQUAL_SIGN STRING_VALUE  {printf("char* %s = %s",$1,$3); $$ = $1; temp[top_value++].stemp = $3; };
 
 /* // Variable Assignment FOR BNF //
 variable_assignment:  VAR_NAME EQUAL_SIGN expression ;
@@ -391,6 +408,7 @@ variable_assignment:  VAR_NAME EQUAL_SIGN expression {
 
     }
  };
+
 expression: variable_value { $$ = $1 ;} | VAR_NAME {} | expression PLUS expression { $$ = $1 + $3 ; } | expression MINUS expression { $$ = $1 - $3; }| expression MULTIPLY expression { $$ = $1 * $3; }| 
 expression DIVIDE expression{ $$ = $1 / $3 ; } | BRACKET_LEFT expression BRACKET_RIGHT { $$ = $2; }| MINUS expression %prec UMINUS { $$ = -$2; } ;
 
