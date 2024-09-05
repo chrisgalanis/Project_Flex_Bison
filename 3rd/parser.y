@@ -346,11 +346,11 @@ next_char: %empty   | COMMA char_init next_char {variable_initiliazation(0,"char
 next_bool: %empty   | COMMA bool_init next_bool {variable_initiliazation(0,"boolean",$2, temp[top_value]); var_counter ++;};
 next_string: %empty | COMMA string_init next_string {variable_initiliazation(0,"String",$2, temp[top_value]); var_counter ++;};
 
-int_init: VAR_NAME {$$ = $1;}   | VAR_NAME EQUAL_SIGN INT_VALUE {printf("int %s = %d",$1,$3); $$ = $1; temp[top_value].itemp = $3; top_value++;} | VAR_NAME EQUAL_SIGN expression {/* printf("int %s = %d",$1,$3); $$ = $1; temp[top_value].itemp = $3; top_value++; */};
+int_init: VAR_NAME {$$ = $1;}   |  VAR_NAME EQUAL_SIGN expression{printf("int %s = %d",$1,$3); $$ = $1; temp[top_value].itemp = $3; top_value++;}  /*{/* printf("int %s = %d",$1,$3); $$ = $1; temp[top_value].itemp = $3; top_value++; };*/
 double_init: VAR_NAME {$$ = $1;} | VAR_NAME EQUAL_SIGN DOUBLE_VALUE {printf("double %s = %f",$1,$3); $$ = $1; temp[top_value].dtemp = $3;};
 char_init: VAR_NAME  {$$ = $1;} | VAR_NAME EQUAL_SIGN CHAR_VALUE {printf("char %s = '%c'",$1,$3); $$ = $1; temp[top_value].ctemp = $3;};
-bool_init: VAR_NAME   {$$ = $1;}| VAR_NAME EQUAL_SIGN BOOLEAN_VALUE {printf("bool %s = %s",$1,$3); $$ = $1; temp[top_value].stemp = $3;};
-string_init: VAR_NAME {$$ = $1;}| VAR_NAME EQUAL_SIGN STRING_VALUE {printf("char* %s = %s",$1,$3); $$ = $1; temp[top_value].stemp = $3;};
+bool_init: VAR_NAME   {$$ = $1;}| VAR_NAME EQUAL_SIGN BOOLEAN_VALUE  {printf("bool %s = %s",$1,$3); $$ = $1; temp[top_value].stemp = $3;};
+string_init: VAR_NAME {$$ = $1;}| VAR_NAME EQUAL_SIGN STRING_VALUE  {printf("char* %s = %s",$1,$3); $$ = $1; temp[top_value].stemp = $3;};
 
 /* // Variable Assignment FOR BNF //
 variable_assignment:  VAR_NAME EQUAL_SIGN expression ;
