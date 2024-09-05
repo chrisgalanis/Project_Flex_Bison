@@ -104,23 +104,40 @@ VAR_NAME : IDENT | CLASS_NAME;
 /* variable_declaration: variable_type VAR_NAME next;
 next: %empty | COMMA VAR_NAME next; */
 
-variable_initialization:    INT int_init next_int         |
-                            DOUBLE doulbe_init next_double|
-                            CHAR char_init next_char      |
-                            BOOLEAN bool_init next_bool   |
-                            STRING string_init next_string ;
 
-next_int: %empty | COMMA int_init next_int;
-next_double: %empty | COMMA doulbe_init next_double;
-next_char: %empty | COMMA char_init next_char;
-next_bool: %empty | COMMA bool_init next_bool;
-next_string: %empty | COMMA string_init next_string;
+variable_declaration:     visibility  INT  VAR_NAME dnext_int  |
+                          visibility  DOUBLE  VAR_NAME dnext_double |
+                          visibility  CHAR VAR_NAME dnext_char     |
+                          visibility  BOOLEAN  VAR_NAME dnext_bool  |
+                          visibility  STRING  VAR_NAME dnext_string ;
 
-int_init: VAR_NAME    | VAR_NAME EQUAL_SIGN INT_VALUE {printf("int %s = %d",$1,$3);};
-doulbe_init: VAR_NAME | VAR_NAME EQUAL_SIGN DOUBLE_VALUE {printf("double %s = %f",$1,$3);};
-char_init: VAR_NAME   | VAR_NAME EQUAL_SIGN CHAR_VALUE {printf("char %s = '%c'",$1,$3);};
-bool_init: VAR_NAME   | VAR_NAME EQUAL_SIGN BOOLEAN_VALUE {printf("bool %s = %s",$1,$3);};
-string_init: VAR_NAME | VAR_NAME EQUAL_SIGN STRING_VALUE {printf("char* %s = %s",$1,$3);} ;
+dnext_int: %empty    | COMMA VAR_NAME dnext_int ; 
+dnext_double: %empty | COMMA VAR_NAME dnext_double ;
+dnext_char: %empty   | COMMA VAR_NAME dnext_char ;
+dnext_bool: %empty   | COMMA VAR_NAME dnext_bool;
+dnext_string: %empty | COMMA VAR_NAME dnext_string;
+
+
+
+
+variable_initialization:  visibility  INT  int_init next_int  |
+                          visibility  DOUBLE  double_init next_double |
+                          visibility  CHAR char_init next_char     |
+                          visibility  BOOLEAN  bool_init next_bool  |
+                          visibility  STRING  string_init next_string ;
+
+next_int: %empty    | COMMA int_init next_int 
+next_double: %empty | COMMA double_init next_double 
+next_char: %empty   | COMMA char_init next_char 
+next_bool: %empty   | COMMA bool_init next_bool 
+next_string: %empty | COMMA string_init next_string 
+
+int_init: VAR_NAME EQUAL_SIGN INT_VALUE/* printf("int %s = %d",$1,$3); $$ = $1; temp[top_value].itemp = $3; top_value++; };*/
+double_init:  VAR_NAME EQUAL_SIGN DOUBLE_VALUE 
+char_init:  VAR_NAME EQUAL_SIGN CHAR_VALUE 
+bool_init: VAR_NAME EQUAL_SIGN BOOLEAN_VALUE  
+string_init:  VAR_NAME EQUAL_SIGN STRING_VALUE  
+
 
 variable_assignment:  VAR_NAME EQUAL_SIGN expression;
 expression: expression PLUS term |expression MINUS term |  BRACKET_LEFT expression  BRACKET_RIGHT | term  ;
