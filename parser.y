@@ -45,7 +45,9 @@
    
     object * objects[100];
     int top_object=0;
+
     class* current_class;
+    function* function_called;
 
     class * classes[100];
     int top_class=0;
@@ -57,7 +59,7 @@
 
     
     class* find_current_class(class* c,int level_counter){
-     if ( level_counter==class_level) return c;
+     if ( c->count_child==0 || level_counter==class_level) return c;
     else find_current_class(c->child[c->count_child-1],level_counter++);
    }
 
@@ -111,7 +113,7 @@
 
     void delete_function_vars()
     {
-        class* c=find_current_class(classes[top_class-1],1);
+        class* c=current_class;
         variable** vs=c->stack;
         int* top=& c->top_var;
 
@@ -129,7 +131,7 @@
 
     void variable_initiliazation(char* visibility , char *type, char *name)
     {
-        class* c=find_current_class(classes[top_class-1],1);
+        class* c=current_class;
         variable** vs=c->stack;
         int* top=& c->top_var;
         if (find_variable_initialize(vs,*top,name) != NULL)
@@ -149,7 +151,7 @@
     void arguement_initiliazation(char* visibility , char *type, char *name)
     {
         variable_initiliazation(visibility,type,name);
-        class* c=find_current_class(classes[top_class-1],1);
+        class* c=current_class;
         
         variable** vs=c->functions[c->top_func-1]->arg;
         int* top=&c->functions[c->top_func-1]->top_arg;
@@ -160,7 +162,7 @@
 
     void fix_visibility(char* visibility)
     {   
-        class* c=find_current_class(classes[top_class-1],1);
+        class* c=current_class;
         while (var_counter != 0)
         {
             c->stack[c->top_var - 1 - var_counter]->visibility =  strdup(visibility);
@@ -210,7 +212,7 @@
 
     void function_initiliazation( char* visibility , char *return_type, char *name)
     {
-        class *c =find_current_class(classes[top_class-1],1);
+        class *c =current_class;
         function** fs=c->functions;
         int* top=& c->top_func;
 
@@ -227,37 +229,29 @@
         }
     }
 
-    void check_parameter_type(char* name){
-        class* c=find_current_class(classes[top_class-1],1);
-        variable* v=find_variable_access(c->stack,c->top_var,name);
+    void check_parameter_type(function* f,variable* v,char* name){
         if (v==NULL){
-            yyerror("!!!Parameter has not been initialized!!!");
+            yyerror("!!!Parameter can not be accessed!!!");
+           printf("!!! Parameter %s has not been initialized in this scope!!!\n",name);
             exit(0);
         }
-        function* f=c->functions[c->top_func-1];
-         printf("skata 3tted%d\n",f->top_arg);
         if( parameter_count>=f->top_arg){
             yyerror("!!!Too many parameters!!!");
             exit(0);
         }
-         printf("skata 4 spotted\n");
-        if( strcmp(f->arg[parameter_count]->type, v->type) == 0){
+        if( strcmp(f->arg[parameter_count]->type, v->type) != 0){
             yyerror("Parameter type mismatch");
             printf("!!! Expected arguement type: %s instead of %s!!!\n",f->arg[parameter_count]->type,v-> type);
             exit(0);
         }
+        printf("PARAMETER %s matched\n",name);
     }
 
-    void check_parameter_count(){
-        printf("skata spotted\n");
-        class* c=find_current_class(classes[top_class-1],1);
-        function* f=c->functions[c->top_func-1];
-        printf("skata spotted\n");
+    void check_parameter_count(function* f){
         if( parameter_count != f->top_arg){
             yyerror("!!!Too few parameters!!!");
             exit(0);
         }
-        printf("skata spotted\n");
     }
 
 
@@ -273,7 +267,7 @@
        // v->parent=NULL;
         return v;
     }
-    //find_current_class(classes[top_class-1],1)
+    //current_class
 
      void print_class(class *c)
     {
@@ -384,8 +378,9 @@
 
     
 
-    void get_object_var(char* name,char* var){
+    variable* get_object_var(char* name,char* var){
         object* o=find_object(name);
+        printf("object name %s\n",o->name);
         if (o== NULL){
             yyerror("Object has not been initialized");
             exit(0);
@@ -398,18 +393,21 @@
         }
         if (strcmp(v->visibility,"private")==0){
             yyerror("Private Variable can not be accessed outside of class scope");
+            printf("Variable %s is private \n",var);
             exit(0);
         }
-        printf("Successfull member access\n");
+        printf("Successfull variable access\n");
+        return v;
     }
 
-    void get_object_func(char* name,char* func){
+    function* get_object_func(char* name,char* func_name){
         object* o=find_object(name);
+
         if (o== NULL){
             yyerror("Object has not been initialized\n");
             exit(0);
         }
-        function* f=find_function(o->c->functions,o->c->top_func,func);
+        function* f=find_function(o->c->functions,o->c->top_func,func_name);
         if (f == NULL){
             yyerror("Function has not been declared\n");
             exit(0);
@@ -418,7 +416,8 @@
             yyerror("Private function can not be accessed outside of class scope\n");
             exit(0);
         }
-        printf("Successfull member access\n");
+        printf("Successfull function access\n");
+        return f;
     }
     
 
@@ -431,7 +430,7 @@
     char cval;
     double dval;
     char *sval;
-}
+    }
 
 // Brackets
 %token CURLY_BRACKET_LEFT
@@ -521,7 +520,7 @@ program: %empty{print_program();} | class_identifier program ;
 VAR_NAME: CLASS_NAME{$$=$1;} | IDENT{$$=$1;};
 
 // Class Identifier of Only One Class
-class_identifier: PUBLIC CLASS CLASS_NAME CURLY_BRACKET_LEFT {class_initiliazation($1,$3);class_level++;printf("CLASS %s IDENTIFIED\n",$3);}class_body CURLY_BRACKET_RIGHT { class_level--;printf("END OF CLASS %s\n",$3);}
+class_identifier: PUBLIC CLASS CLASS_NAME CURLY_BRACKET_LEFT {class_initiliazation($1,$3);class_level++;current_class=find_current_class(classes[top_class-1],1);printf("CLASS %s IDENTIFIED\n",$3);}class_body CURLY_BRACKET_RIGHT { class_level--;current_class=find_current_class(classes[top_class-1],1);printf("END OF CLASS %s\n",$3);}
 
 
 // !! Double Check if class members before of functions
@@ -580,7 +579,7 @@ class_instance: CLASS_NAME VAR_NAME EQUAL_SIGN NEW CLASS_NAME BRACKET_LEFT BRACK
         printf("ERROR!!Invalid initiliazation of instance %s\n",$2);
     }
     };
-member_access: VAR_NAME DOT VAR_NAME {get_object_var($1,$3);} | VAR_NAME DOT function_call {printf("func access\n");get_object_func($1,$3);}; //End Class Instance
+member_access: VAR_NAME DOT VAR_NAME {get_object_var($1,$3);} | VAR_NAME DOT VAR_NAME BRACKET_LEFT {function_called=get_object_func($1,$3);} parameters_start BRACKET_RIGHT; //End Class Instance
 
 
 // Functions
@@ -597,17 +596,21 @@ arguments_end : %empty | COMMA arguments
 inside_void_function: inside_brackets | inside_brackets RETURN SEMICOLON ;
 inside_function: inside_brackets  RETURN VAR_NAME SEMICOLON{}  | inside_brackets RETURN data_value SEMICOLON ;
 
-function_call:  VAR_NAME BRACKET_LEFT parameters_start BRACKET_RIGHT {$$=$1;};
+function_call:  VAR_NAME BRACKET_LEFT{function_called=find_function(current_class->functions,current_class->top_func,$1);} parameters_start BRACKET_RIGHT {$$=$1;};
 
-parameters_start:%empty{printf("no parameter\n");}|parameters{check_parameter_count();parameter_count=0;} 
-parameters: VAR_NAME parameters_end{printf("var name:%s\n",$1);check_parameter_type($1);parameter_count++;}|data_value parameters_end
+parameters_start:%empty{printf("no parameter\n");}|parameters{check_parameter_count(function_called);parameter_count=0;} 
+parameters:
+VAR_NAME {check_parameter_type(function_called,find_variable_access(current_class->stack,current_class->top_var,$1),$1);parameter_count++;} parameters_end
+|VAR_NAME DOT VAR_NAME{check_parameter_type(function_called,get_object_var($1,$3),$3);parameter_count++;} parameters_end  
+|data_value {parameter_count++;}parameters_end;
+
 parameters_end:%empty
 |COMMA parameters
 
 // End Functions
 
 // !! Ambiguity !!
-inside_brackets: %empty|function_call inside_brackets|functions inside_brackets | loops_n_condition inside_brackets | data_initialization  SEMICOLON inside_brackets | data_assignment SEMICOLON inside_brackets | class_instance SEMICOLON inside_brackets |member_access SEMICOLON inside_brackets ;
+inside_brackets: %empty|function_call SEMICOLON inside_brackets|functions inside_brackets | loops_n_condition inside_brackets | data_initialization  SEMICOLON inside_brackets | data_assignment SEMICOLON inside_brackets | class_instance SEMICOLON inside_brackets |member_access SEMICOLON inside_brackets ;
 
 loops_n_condition: for_statement | switch | do_while | if  ; // + Δήλωση Μεταβλητών
 
