@@ -1,4 +1,3 @@
-
 %{
 
     #include <stdio.h>
@@ -38,6 +37,16 @@
         int count_child;
     } class;
 
+    typedef struct object
+    {
+        char *name;
+        class * c;
+    } object;
+   
+    object * objects[100];
+    int top_object=0;
+    class* current_class;
+
     class * classes[100];
     int top_class=0;
 
@@ -45,95 +54,121 @@
     int function_counter=0;
     int class_level=0;
     int parameter_count=0;
-    /*Class Recognition*/
+
     
-    class * create_class(char* visibility, char *name)
-    {
-         class* v = ( class *)malloc(sizeof( class));
-        v->name = name; // strdup is NOT used BECAUSE SEGMENTATION ERROR
-        v->visibility = visibility;
-        v->top_var=0;
-        v->top_func=0;
-        v->count_child=0;
-    
-        return v;
-    }
-    //find_current_class(classes[top_class-1],1)
-   class* find_current_class(class* c,int class_counter){
-     if (c->count_child==0 || class_counter==class_level) return c;
-    else find_current_class(c->child[c->count_child-1],class_counter++);
+    class* find_current_class(class* c){
+     if (c->count_child==0) return c;
+    else find_current_class(c->child[c->count_child-1]);
    }
 
+     /* Variables Recognition */ 
 
-
-   
-    void print_program(){
-        printf("--------------PROGRAM--------------\n");
-        for(int i=0;i<top_class;i++){
-            print_class(classes[i]);
-            print_inner_classes(classes[i]);
-        }
- 
-    }
-
-     void print_class(class *c)
+    variable * create_variable(char* visibility, char *type, char *name)
     {
-        printf("CLASS: %s %s\n",c->visibility, c->name);
-        printf("\t\tVariable stack:\n");
-        print_stack_variable(c->stack,c->top_var);
-        printf("\t\tFunction stack:\n");
-        print_stack_function(c->functions,c->top_func);
+        variable *v = (variable *)malloc(sizeof(variable));
+        v->name = name; // strdup is NOT used to copy the string BECAUSE OF SEGMENTATION ERROR
+        v->type = type; 
+        // v->value = value;
+        v->visibility = visibility;
+        v->inside_function = function_counter;
+        return v;
     }
 
-    void print_inner_classes(class* c){
-        if (c->count_child==0) return;
-        printf("INNER CLASSES OF:%s\n",c->name);
-            for(int i = 0; i < c->count_child; i++){
-                print_class(c->child[i]);
-                print_inner_classes(c->child[i]);
-            }
-        printf("END OF INNER CLASSES OF:%s\n",c->name);
-    }
-
-    int find_class(char *name,class* c[],int* top)
+    void push_var(variable* stack[],int* top,variable *v)
     {
-        for(int i = 0; i < *top; i++)
-            if(strcmp(c[i]->name, name) == 0) return i;
-        return -1;
+        stack[(*top)++] = v;
     }
 
-    void push_class(class* stack[],int* top,class *c)
+    void pop_var(variable* stack[],int* top)
     {   
-        stack[(*top)++] = c;
+        (*top)--;
+        free (stack[*top]);
     }
 
-    void class_initiliazation(char* visibility , char *name)
-    {   class** cl=classes;
-        int* top=&top_class;
-        
-        class** clone=cl;
+    void print_variable(variable *v)
+    {
+        printf("VARIABLE: %s %s %s Value: %s, in_function: %d\n", v->visibility, v->type, v->name, v->value,v->inside_function);
+    }
 
-        if(class_level>0){
-            for(int i=0;i<class_level;i++){
-                cl=cl[(*top)-1]->child;//set child stack as current stack
-                top=&(clone[(*top)-1]->count_child);//set child counter as current counter
-                clone=cl;//copy current class stack
-            }
+    void print_stack_variable(variable* stack[],int top_var)
+    {
+        for(int i = 0; i < top_var; i++)
+            print_variable(stack[i]);
+    }
+
+    variable* find_variable_access(variable* stack[],int top_var,char *name){
+        for(int i = 0; i < top_var; i++)
+            if(strcmp(stack[i]->name, name) == 0) return stack[i];
+        return NULL;
+    }
+
+    variable* find_variable_initialize(variable* stack[],int top_var,char *name)
+    {
+        for(int i = 0; i < top_var; i++)
+            if(strcmp(stack[i]->name, name) == 0 && stack[i]->inside_function == function_counter) return stack[i];
+        return NULL;
+    }
+
+    void delete_function_vars()
+    {
+        class* c=find_current_class(classes[top_class-1]);
+        variable** vs=c->stack;
+        int* top=& c->top_var;
+
+        //printf("BEFORE FUNCTION VAR DELETION\n");
+        //print_stack_variable( vs,*top);
+        while(*top != 0  && vs[(*top)-1]->inside_function == function_counter ){
+           pop_var(vs,top);
         }
+        function_counter--;
+        //printf("AFTER FUNCTION VAR DELETION\n");
+         //print_stack_variable( vs,*top);
+        return;
+    }
 
-        if (find_class(name,cl,top) != -1)
+
+    void variable_initiliazation(char* visibility , char *type, char *name)
+    {
+        class* c=find_current_class(classes[top_class-1]);
+        variable** vs=c->stack;
+        int* top=& c->top_var;
+        if (find_variable_initialize(vs,*top,name) != NULL)
         {   
-            yyerror("Class has been initialized");
-            printf("!!! Class: %s has been initialized with visibility: %d !!!\n", name, visibility);
+            yyerror("Variable has been initialized");
+            printf("!!! Variable: %s has been initialized with type: %s !!!\n", name, type);
             exit(0);
         }
         else
         {
-            class* c = create_class(visibility, name);
-            push_class(cl,top,c);
+            variable* var = create_variable(visibility, type, name); 
+            push_var(vs,top,var);
+           // print_stack_variable( c->stack,c->top_var);
         }
     }
-    
+
+    void arguement_initiliazation(char* visibility , char *type, char *name)
+    {
+        variable_initiliazation(visibility,type,name);
+        class* c=find_current_class(classes[top_class-1]);
+        
+        variable** vs=c->functions[c->top_func-1]->arg;
+        int* top=&c->functions[c->top_func-1]->top_arg;
+        variable* var = create_variable(visibility, type, name); 
+        
+        push_var(vs,top,var);
+    }
+
+    void fix_visibility(char* visibility)
+    {   
+        class* c=find_current_class(classes[top_class-1]);
+        while (var_counter != 0)
+        {
+            c->stack[c->top_var - 1 - var_counter]->visibility =  strdup(visibility);
+            var_counter --;
+        }
+         var_counter= 0;
+    }
+
     /* Functions Recognition */ 
 
     function * create_function(char* visibility, char *return_type, char *name)
@@ -160,11 +195,11 @@
             print_function(functions[i]);
     }
 
-    int find_function(function* functions[],int top_func,char *name)
+    function* find_function(function* functions[],int top_func,char *name)
     {
         for(int i = 0; i < top_func; i++)
-            if(strcmp(functions[i]->name, name) == 0) return i;
-        return -1;
+            if(strcmp(functions[i]->name, name) == 0) return functions[i];
+        return NULL;
     }
 
     void push_function(function* stack[],int* top,function *f)
@@ -175,11 +210,11 @@
 
     void function_initiliazation( char* visibility , char *return_type, char *name)
     {
-        class *c =find_current_class(classes[top_class-1],1);
+        class *c =find_current_class(classes[top_class-1]);
         function** fs=c->functions;
         int* top=& c->top_func;
 
-        if (find_function(fs,*top,name) > 0)
+        if (find_function(fs,*top,name) != NULL)
         {   
             yyerror("Function has been initialized");
             printf("!!! Function: %s has been initialized with type: %s !!!\n", name, return_type);
@@ -192,22 +227,27 @@
         }
     }
 
-    void check_parameter_type(char* type){
-        class* c=find_current_class(classes[top_class-1],1);
+    void check_parameter_type(char* name){
+        class* c=find_current_class(classes[top_class-1]);
+        variable* v=find_variable_access(c->stack,c->top_var,name);
+        if (v==NULL){
+            yyerror("!!!Parameter has not been initialized!!!");
+            exit(0);
+        }
         function* f=c->functions[c->top_func-1];
         if( parameter_count>=f->top_arg){
             yyerror("!!!Too many parameters!!!");
             exit(0);
         }
-        if( strcmp(f->arg[parameter_count]->type, type) == 0){
+        if( strcmp(f->arg[parameter_count]->type, v->type) == 0){
             yyerror("Parameter type mismatch");
-            printf("!!! Expected arguement type: %s instead of %s!!!\n",f->arg[parameter_count]->type, type);
+            printf("!!! Expected arguement type: %s instead of %s!!!\n",f->arg[parameter_count]->type,v-> type);
             exit(0);
         }
     }
 
     void check_parameter_count(){
-        class* c=find_current_class(classes[top_class-1],1);
+        class* c=find_current_class(classes[top_class-1]);
         function* f=c->functions[c->top_func-1];
         if( parameter_count!=f->top_arg){
             yyerror("!!!Too few parameters!!!");
@@ -215,114 +255,166 @@
         }
     }
 
-     /* Variables Recognition */ 
 
-    variable * create_variable(char* visibility, char *type, char *name)
+    /*Class Recognition*/
+    class * create_class(char* visibility, char *name)
     {
-        variable *v = (variable *)malloc(sizeof(variable));
-        v->name = name; // strdup is NOT used to copy the string BECAUSE OF SEGMENTATION ERROR
-        v->type = type; 
-        // v->value = value;
+         class* v = ( class *)malloc(sizeof( class));
+        v->name = name; // strdup is NOT used BECAUSE SEGMENTATION ERROR
         v->visibility = visibility;
-        v->inside_function = function_counter;
+        v->top_var=0;
+        v->top_func=0;
+        v->count_child=0;
+    
         return v;
     }
+    //find_current_class(classes[top_class-1])
 
-    void push_var(variable* stack[],int* top,variable *v)
+     void print_class(class *c)
     {
-        stack[(*top)++] = v;
+        printf("CLASS: %s %s\n",c->visibility, c->name);
+        printf("\t\tVariable stack:\n");
+        print_stack_variable(c->stack,c->top_var);
+        printf("\t\tFunction stack:\n");
+        print_stack_function(c->functions,c->top_func);
     }
 
-    void pop_var(variable* stack[],int* top)
-    {   
-        (*top)--;
-        free (stack[*top]);
+    void print_inner_classes(class* c){
+        if (c->count_child==0) return;
+        printf("INNER CLASSES OF:%s\n",c->name);
+            for(int i = 0; i < c->count_child; i++){
+                print_class(c->child[i]);
+                print_inner_classes(c->child[i]);
+            }
+        printf("END OF INNER CLASSES OF:%s\n",c->name);
     }
 
-    void print_stack_variable(variable* stack[],int top_var)
-    {
-        for(int i = 0; i < top_var; i++)
-            print_variable(stack[i]);
-    }
-
-
-    void print_variable(variable *v)
-    {
-        printf("VARIABLE: %s %s %s Value: %s, in_function: %d\n", v->visibility, v->type, v->name, v->value,v->inside_function);
-    }
-
-    int find_variable_access(variable* stack[],int top_var,char *name){
-        for(int i = 0; i < top_var; i++)
-            if(strcmp(stack[i]->name, name) == 0) return i;
-        return -1;
-    }
-
-    int find_variable_initialize(variable* stack[],int top_var,char *name)
-    {
-        for(int i = 0; i < top_var; i++)
-            if(strcmp(stack[i]->name, name) == 0 && stack[i]->inside_function == function_counter) return i;
-        return -1;
-    }
-
-    void delete_function_vars()
-    {
-        class* c=find_current_class(classes[top_class-1],1);
-        variable** vs=c->stack;
-        int* top=& c->top_var;
-
-        //printf("BEFORE FUNCTION VAR DELETION\n");
-        //print_stack_variable( vs,*top);
-        while(*top != 0  && vs[(*top)-1]->inside_function == function_counter ){
-           pop_var(vs,top);
+    void print_program(){
+        printf("--------------PROGRAM--------------\n");
+        for(int i=0;i<top_class;i++){
+            print_class(classes[i]);
+            print_inner_classes(classes[i]);
         }
-        function_counter--;
-        //printf("AFTER FUNCTION VAR DELETION\n");
-         //print_stack_variable( vs,*top);
-        return;
+ 
     }
 
-
-    void variable_initiliazation(char* visibility , char *type, char *name)
+    class* find_class(char *name,class* c[],int top)
     {
-        class* c=find_current_class(classes[top_class-1],1);
-        variable** vs=c->stack;
-        int* top=& c->top_var;
-        if (find_variable_initialize(vs,*top,name) != -1)
+        for(int i = 0; i < top; i++)
+            if(strcmp(c[i]->name, name) == 0) return c[i];
+        return NULL;
+    }
+
+    void push_class(class* stack[],int* top,class *c)
+    {   
+        stack[(*top)++] = c;
+    }
+
+    void class_initiliazation(char* visibility , char *name)
+    {   class** cl=classes;
+        int* top=&top_class;
+        
+        class** clone=cl;
+
+        if(class_level>0){
+            for(int i=0;i<class_level;i++){
+                cl=cl[(*top)-1]->child;//set child stack as current stack
+                top=&(clone[(*top)-1]->count_child);//set child counter as current counter
+                clone=cl;//copy current class stack
+            }
+        }
+
+        if (find_class(name,cl,*top) != NULL)
         {   
-            yyerror("Variable has been initialized");
-            printf("!!! Variable: %s has been initialized with type: %s !!!\n", name, type);
+            yyerror("Class has been initialized");
+            printf("!!! Class: %s has been initialized with visibility: %s !!!\n", name, visibility);
             exit(0);
         }
         else
         {
-            variable* var = create_variable(visibility, type, name); 
-            push_var(vs,top,var);
-           // print_stack_variable( c->stack,c->top_var);
+            class* c = create_class(visibility, name);
+            
+            push_class(cl,top,c);
         }
     }
+    /*Object*/
+    void print_objects(){
+        for(int i=0;i<top_object;i++)
+            printf("OBJECT: %s of class %s\n",objects[i]->name, objects[i]->c->name);
+    }
 
-    void arguement_initiliazation(char* visibility , char *type, char *name)
+     object * create_object(char *name,char* class_name)
     {
-        variable_initiliazation(visibility,type,name);
-        class* c=find_current_class(classes[top_class-1],1);
-        
-        variable** vs=c->functions[c->top_func-1]->arg;
-        int* top=&c->functions[c->top_func-1]->top_arg;
-        variable* var = create_variable(visibility, type, name); 
-        
-        push_var(vs,top,var);
+         object* o = ( object *)malloc(sizeof( object));
+        o->name = name; // strdup is NOT used BECAUSE SEGMENTATION ERROR
+        o->c=find_class(class_name,classes,top_class);
+        if (o->c==NULL){
+            yyerror("Class has not been declared\n");
+            exit(0);
+        }
+        return o;
     }
 
-    void fix_visibility(char* visibility)
-    {   
-        class* c=find_current_class(classes[top_class-1],1);
-        while (var_counter != 0)
-        {
-            c->stack[c->top_var - 1 - var_counter]->visibility =  strdup(visibility);
-            var_counter --;
-        }
-         var_counter= 0;
+    object* find_object(char* name){
+        for(int i = 0; i < top_object; i++)
+            if(strcmp(objects[i]->name, name) == 0) return objects[i];
+        return NULL;
     }
+
+    void object_initiliazation(char *name,char* class_name){
+           if (find_object(name) != NULL)
+        {   
+            yyerror("Object has been initialized");
+            printf("!!! Object: %s has been initialized !!!\n", name);
+            exit(0);
+        }
+        else
+        {
+            object* o=create_object(name,class_name);
+            objects[top_object++]=o;
+            print_objects();
+        }
+    }
+
+    
+
+    void get_object_var(char* name,char* var){
+        object* o=find_object(name);
+        if (o== NULL){
+            yyerror("Object has not been initialized");
+            exit(0);
+        }
+        variable* v=find_variable_access(o->c->stack,o->c->top_var,var);
+        if (v == NULL){
+            yyerror("Variable has not been declared");
+            printf("Variable %s has not been declared in class %s\n",var,o->c->name);
+            exit(0);
+        }
+        if (strcmp(v->visibility,"private")==0){
+            yyerror("Private Variable can not be accessed outside of class scope");
+            exit(0);
+        }
+        printf("Successfull member access\n");
+    }
+
+    void get_object_func(char* name,char* func){
+        object* o=find_object(name);
+        if (o== NULL){
+            yyerror("Object has not been initialized\n");
+            exit(0);
+        }
+        function* f=find_function(o->c->functions,o->c->top_func,func);
+        if (f == NULL){
+            yyerror("Function has not been declared\n");
+            exit(0);
+        }
+        if (strcmp(f->visibility,"private")==0){
+            yyerror("Private function can not be accessed outside of class scope\n");
+            exit(0);
+        }
+        printf("Successfull member access\n");
+    }
+    
 
 %}
 
@@ -393,6 +485,7 @@
 %type <sval> VAR_NAME;
 // Function Type
 %type <sval> function_visibility;
+%type <sval> function_call;
 
 %token <sval> IDENT
 %token <sval> VOID
@@ -422,7 +515,7 @@ program: %empty{print_program();} | class_identifier program ;
 VAR_NAME: CLASS_NAME{$$=$1;} | IDENT{$$=$1;};
 
 // Class Identifier of Only One Class
-class_identifier: visibility CLASS CLASS_NAME CURLY_BRACKET_LEFT {class_initiliazation($1,$3);class_level++;printf("CLASS %s IDENTIFIED\n",$3);}class_body CURLY_BRACKET_RIGHT { class_level--;printf("END OF CLASS %s\n",$3);}
+class_identifier: PUBLIC CLASS CLASS_NAME CURLY_BRACKET_LEFT {class_initiliazation($1,$3);class_level++;printf("CLASS %s IDENTIFIED\n",$3);}class_body CURLY_BRACKET_RIGHT { class_level--;printf("END OF CLASS %s\n",$3);}
 
 
 // !! Double Check if class members before of functions
@@ -430,7 +523,7 @@ class_body: %empty |  functions class_body
 	               |  class_members class_body // intitalisation class_body
                    |  class_identifier class_body ;
 	        
-class_members:   data_initialization SEMICOLON |   data_assignment SEMICOLON | member_access SEMICOLON;
+class_members:   data_initialization SEMICOLON |   data_assignment SEMICOLON | member_access SEMICOLON | class_instance SEMICOLON;
 // For the 2nd Version we need to recognise: int var = INT_Number exc.
 
 //initialisation: data_init | function_init;
@@ -473,13 +566,20 @@ data_type: INT { $$ = "int"; }
 data_value:  INT_VALUE | CHAR_VALUE | DOUBLE_VALUE | BOOLEAN_VALUE | STRING_VALUE ;
 
 //Class Instance
-class_instance: CLASS_NAME VAR_NAME EQUAL_SIGN NEW CLASS_NAME BRACKET_LEFT BRACKET_RIGHT ;
-member_access: VAR_NAME DOT VAR_NAME ; //End Class Instance
+class_instance: CLASS_NAME VAR_NAME EQUAL_SIGN NEW CLASS_NAME BRACKET_LEFT BRACKET_RIGHT {
+    if(strcmp($1,$5)==0){
+    object_initiliazation($2,$1);
+    printf("instance %s of class %s\n",$2,$1);
+    }else{
+        printf("ERROR!!Invalid initiliazation of instance %s\n",$2);
+    }
+    };
+member_access: VAR_NAME DOT VAR_NAME {get_object_var($1,$3);} | VAR_NAME DOT function_call {get_object_func($1,$3);}; //End Class Instance
 
 
 // Functions
-functions: function_visibility VOID VAR_NAME BRACKET_LEFT{function_counter++;function_initiliazation($1,"void",$3); printf("Function %s is identified\n"),$3;} arguments_start BRACKET_RIGHT CURLY_BRACKET_LEFT inside_void_function CURLY_BRACKET_RIGHT  { delete_function_vars();printf("END OF Function\n");};
-         | function_visibility data_type VAR_NAME BRACKET_LEFT {function_counter++;function_initiliazation($1,$2,$3); printf("Function %s is identified\n",$3);}  arguments_start BRACKET_RIGHT CURLY_BRACKET_LEFT inside_function CURLY_BRACKET_RIGHT  { delete_function_vars();printf("END OF Function\n");};
+functions: function_visibility VOID VAR_NAME BRACKET_LEFT{function_counter++;function_initiliazation($1,"void",$3); printf("Function %s is identified\n",$3);} arguments_start BRACKET_RIGHT CURLY_BRACKET_LEFT inside_void_function CURLY_BRACKET_RIGHT  { delete_function_vars();printf("END OF function \n");}
+         | function_visibility data_type VAR_NAME BRACKET_LEFT {function_counter++;function_initiliazation($1,$2,$3); printf("Function %s is identified\n",$3);}  arguments_start BRACKET_RIGHT CURLY_BRACKET_LEFT inside_function CURLY_BRACKET_RIGHT  { delete_function_vars();printf("END OF function \n");};
 function_visibility: PRIVATE {$$ = $1;} | PUBLIC { $$ = $1;};
 
 arguments_start : %empty| arguments
@@ -491,10 +591,10 @@ arguments_end : %empty | COMMA arguments
 inside_void_function: inside_brackets | inside_brackets RETURN SEMICOLON ;
 inside_function: inside_brackets  RETURN VAR_NAME SEMICOLON{}  | inside_brackets RETURN data_value SEMICOLON ;
 
-function_call: CLASS_NAME DOT function_call | VAR_NAME BRACKET_LEFT parameters_start BRACKET_RIGHT SEMICOLON;
+function_call:  VAR_NAME BRACKET_LEFT parameters_start BRACKET_RIGHT {$$=$1;};
 
 parameters_start:%empty|parameters
-parameters: VAR_NAME parameters_end{check_parameter_type($1);parameter_count++;}|data_value parameters_end
+parameters: VAR_NAME parameters_end{printf("var name:%s\n",$1);check_parameter_type($1);parameter_count++;}|data_value parameters_end
 parameters_end:%empty{check_parameter_count();parameter_count=0;} 
 |COMMA parameters
 
@@ -502,8 +602,6 @@ parameters_end:%empty{check_parameter_count();parameter_count=0;}
 
 // !! Ambiguity !!
 inside_brackets: %empty|function_call inside_brackets|functions inside_brackets | loops_n_condition inside_brackets | data_initialization  SEMICOLON inside_brackets | data_assignment SEMICOLON inside_brackets | class_instance SEMICOLON inside_brackets |member_access SEMICOLON inside_brackets ;
-
-
 
 loops_n_condition: for_statement | switch | do_while | if  ; // + Δήλωση Μεταβλητών
 
@@ -562,5 +660,4 @@ int main(void)
 void yyerror(const char *s)
 {
     printf("Error: %s\n",s);
-
 }
