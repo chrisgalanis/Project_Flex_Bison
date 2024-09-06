@@ -52,7 +52,7 @@
     class * classes[100];
     int top_class=0;
 
-    int var_counter = 0;
+    char * visibility;
     int function_counter=0;
     int class_level=0;
     int parameter_count=0;
@@ -129,7 +129,7 @@
     }
 
 
-    void variable_initiliazation(char* visibility , char *type, char *name)
+    void variable_initialization(char* visibility , char *type, char *name)
     {
         class* c=current_class;
         variable** vs=c->stack;
@@ -148,9 +148,9 @@
         }
     }
 
-    void arguement_initiliazation(char* visibility , char *type, char *name)
+    void arguement_initialization(char* visibility , char *type, char *name)
     {
-        variable_initiliazation(visibility,type,name);
+        variable_initialization(visibility,type,name);
         class* c=current_class;
         
         variable** vs=c->functions[c->top_func-1]->arg;
@@ -158,17 +158,6 @@
         variable* var = create_variable(visibility, type, name); 
         
         push_var(vs,top,var);
-    }
-
-    void fix_visibility(char* visibility)
-    {   
-        class* c=current_class;
-        while (var_counter != 0)
-        {
-            c->stack[c->top_var - 1 - var_counter]->visibility =  strdup(visibility);
-            var_counter --;
-        }
-         var_counter= 0;
     }
 
     /* Functions Recognition */ 
@@ -478,11 +467,7 @@
 %token RETURN
 
 //data Types
-%type <sval> int_init;
-%type <sval> double_init;
-%type <sval> char_init;
-%type <sval> bool_init;
-%type <sval> string_init;
+
 
 %type <sval> data_assignment
 %type <sval> data_type
@@ -528,30 +513,37 @@ class_body: %empty |  functions class_body
 	               |  class_members class_body // intitalisation class_body
                    |  class_identifier class_body ;
 	        
-class_members:   data_initialization SEMICOLON |   data_assignment SEMICOLON | member_access SEMICOLON | class_instance SEMICOLON;
+class_members:  data_declaration SEMICOLON | data_initialization SEMICOLON |   data_assignment SEMICOLON | member_access SEMICOLON | class_instance SEMICOLON;
 // For the 2nd Version we need to recognise: int var = INT_Number exc.
 
 //initialisation: data_init | function_init;
 visibility:  %empty { $$ = "default"; } | PUBLIC { $$ = $1; } | PRIVATE { $$ = $1; } ;
 
+data_declaration:     visibility  INT  VAR_NAME  { visibility=$1; variable_initialization($1,"int",$3); } dnext_int|
+                          visibility  DOUBLE  VAR_NAME  { visibility=$1;variable_initialization($1,"double",$3);  } dnext_double|
+                          visibility  CHAR VAR_NAME    { visibility=$1;variable_initialization($1,"char",$3); }  dnext_char |
+                          visibility  BOOLEAN  VAR_NAME   { visibility=$1;variable_initialization($1,"boolean",$3); } dnext_bool|
+                          visibility  STRING  VAR_NAME  { visibility=$1;variable_initialization($1,"String",$3); }dnext_string;
 
-data_initialization:  visibility  INT  int_init next_int {variable_initiliazation($1,$2,$3); fix_visibility($1);}|
-                          visibility  DOUBLE  double_init next_double  {variable_initiliazation($1,$2,$3); fix_visibility($1);} |
-                          visibility  CHAR char_init next_char    {variable_initiliazation($1,$2,$3); fix_visibility($1);} |
-                          visibility  BOOLEAN  bool_init next_bool {variable_initiliazation($1,$2,$3); fix_visibility($1);} |
-                          visibility  STRING  string_init next_string {variable_initiliazation($1,$2,$3); fix_visibility($1);};
+dnext_int: %empty    | COMMA VAR_NAME  { variable_initialization(visibility,"int",$2);}dnext_int; 
+dnext_double: %empty | COMMA VAR_NAME  { variable_initialization(visibility,"double",$2);}dnext_double;
+dnext_char: %empty   | COMMA VAR_NAME  { variable_initialization(visibility,"char",$2); }dnext_char;
+dnext_bool: %empty   | COMMA VAR_NAME  { variable_initialization(visibility,"boolean",$2); }dnext_bool;
+dnext_string: %empty | COMMA VAR_NAME  {  variable_initialization(visibility,"String",$2); }dnext_string;
 
-next_int: %empty    | COMMA int_init next_int  {variable_initiliazation(0,"int",$2); var_counter ++; };
-next_double: %empty | COMMA double_init next_double {variable_initiliazation(0,"double",$2); var_counter ++; };
-next_char: %empty   | COMMA char_init next_char {variable_initiliazation(0,"char",$2); var_counter ++; };
-next_bool: %empty   | COMMA bool_init next_bool    {variable_initiliazation(0,"boolean",$2); var_counter ++; };
-next_string: %empty | COMMA string_init next_string    {variable_initiliazation(0,"string",$2); var_counter ++; };
 
-int_init: VAR_NAME {$$ = $1;}   | VAR_NAME EQUAL_SIGN INT_VALUE {printf("int %s = %d",$1,$3); $$ = $1;};
-double_init: VAR_NAME {$$ = $1;} | VAR_NAME EQUAL_SIGN DOUBLE_VALUE {printf("double %s = %f",$1,$3); $$ = $1;};
-char_init: VAR_NAME  {$$ = $1;} | VAR_NAME EQUAL_SIGN CHAR_VALUE {printf("char %s = '%c'",$1,$3); $$ = $1;};
-bool_init: VAR_NAME   {$$ = $1;}| VAR_NAME EQUAL_SIGN BOOLEAN_VALUE {printf("bool %s = %s",$1,$3); $$ = $1;};
-string_init: VAR_NAME {$$ = $1;}| VAR_NAME EQUAL_SIGN STRING_VALUE {printf("char* %s = %s",$1,$3); $$ = $1;} ;
+data_initialization:  visibility  INT  VAR_NAME EQUAL_SIGN expression  {visibility=$1;variable_initialization($1,$2,$3);}next_int|
+                          visibility  DOUBLE  VAR_NAME EQUAL_SIGN expression   {visibility=$1;variable_initialization($1,$2,$3);} next_double|
+                          visibility  CHAR VAR_NAME EQUAL_SIGN expression     {visibility=$1;variable_initialization($1,$2,$3);} next_char|
+                          visibility  BOOLEAN  VAR_NAME EQUAL_SIGN expression  {visibility=$1;variable_initialization($1,$2,$3);} next_bool|
+                          visibility  STRING  VAR_NAME EQUAL_SIGN expression  {visibility=$1;variable_initialization($1,$2,$3);}next_string;
+
+next_int: %empty    | COMMA VAR_NAME EQUAL_SIGN expression  {variable_initialization(visibility,"int",$2); }next_int;
+next_double: %empty | COMMA VAR_NAME EQUAL_SIGN expression  {variable_initialization(visibility,"double",$2);  }next_double;
+next_char: %empty   | COMMA VAR_NAME EQUAL_SIGN expression  {variable_initialization(visibility,"char",$2);  }next_char;
+next_bool: %empty   | COMMA VAR_NAME EQUAL_SIGN expression  {variable_initialization(visibility,"boolean",$2);  }next_bool;
+next_string: %empty | COMMA VAR_NAME EQUAL_SIGN expression  {variable_initialization(visibility,"string",$2); }next_string;
+
 
 // This is NEW
 data_assignment:  VAR_NAME EQUAL_SIGN expression { };
@@ -588,7 +580,7 @@ functions: function_visibility VOID VAR_NAME BRACKET_LEFT{function_counter++;fun
 function_visibility: PRIVATE {$$ = $1;} | PUBLIC { $$ = $1;};
 
 arguments_start : %empty| arguments
-arguments: data_type VAR_NAME {arguement_initiliazation("default",$1,$2);} arguments_end
+arguments: data_type VAR_NAME {arguement_initialization("default",$1,$2);} arguments_end
 arguments_end : %empty | COMMA arguments 
 
 
