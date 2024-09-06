@@ -6,12 +6,20 @@
 
     int yylex();
     void yyerror(const char *s);
+
+    typedef struct var_value
+    {
+        int itemp;
+        double dtemp;
+        char* ctemp;
+        char *stemp;
+    } var_value;
     
     typedef struct variable
     {
         char *name;
         char *type;
-        char *value;
+        var_value value;
         char* visibility;
         int inside_function;//bool value 
     } variable; 
@@ -46,7 +54,7 @@
     object * objects[100];
     int top_object=0;
 
-    class* current_class;
+    class* current;
     function* function_called;
 
     class * classes[100];
@@ -58,9 +66,9 @@
     int parameter_count=0;
 
     
-    class* find_current_class(class* c,int level_counter){
+    class* find_current(class* c,int level_counter){
      if ( c->count_child==0 || level_counter==class_level) return c;
-    else find_current_class(c->child[c->count_child-1],level_counter++);
+    else find_current(c->child[c->count_child-1],level_counter++);
    }
 
      /* Variables Recognition */ 
@@ -70,7 +78,7 @@
         variable *v = (variable *)malloc(sizeof(variable));
         v->name = name; // strdup is NOT used to copy the string BECAUSE OF SEGMENTATION ERROR
         v->type = type; 
-        // v->value = value;
+        //v->value = NULL;
         v->visibility = visibility;
         v->inside_function = function_counter;
         return v;
@@ -89,7 +97,7 @@
 
     void print_variable(variable *v)
     {
-        printf("VARIABLE: %s %s %s Value: %s, in_function: %d\n", v->visibility, v->type, v->name, v->value,v->inside_function);
+        printf("VARIABLE: %s %s %s Value: %d, in_function: %d\n", v->visibility, v->type, v->name, v->value.itemp,v->inside_function);
     }
 
     void print_stack_variable(variable* stack[],int top_var)
@@ -113,7 +121,7 @@
 
     void delete_function_vars()
     {
-        class* c=current_class;
+        class* c=current;
         variable** vs=c->stack;
         int* top=& c->top_var;
 
@@ -131,7 +139,7 @@
 
     void variable_initialization(char* visibility , char *type, char *name)
     {
-        class* c=current_class;
+        class* c=current;
         variable** vs=c->stack;
         int* top=& c->top_var;
         if (find_variable_initialize(vs,*top,name) != NULL)
@@ -148,10 +156,40 @@
         }
     }
 
+
+    void fix_value( char* name,var_value value){
+        variable* v=find_variable_access(current->stack,current->top_var,name);
+    if ( v == NULL ){
+        yyerror("Variable has not been initialized");
+        exit(0);
+    }
+        
+    if (strcmp(v->type, "int") == 0){
+         v->value.itemp = value.itemp;
+        printf("Variable: %s has been assigned with value: %d\n", v->name, v->value.itemp);
+    }
+     else if (strcmp(v->type, "double") == 0){
+        v->value.dtemp = value.dtemp;
+        printf("Variable: %s has been assigned with value: %d\n", v->name, v->value.dtemp);
+    }
+    else if (strcmp(v->type, "char") == 0){
+        v->value.ctemp =value.ctemp ;
+        printf("Variable: %s has been assigned with value: %d\n", v->name, v->value.ctemp);
+    }
+    else if (strcmp(v->type, "boolean") == 0){
+        v->value.stemp = value.stemp;
+        printf("Variable: %s has been assigned with value: %d\n", v->name, v->value.stemp);
+    }
+    else{
+        v->value.stemp = value.stemp;
+        printf("Variable: %s has been assigned with value: %d\n", v->name, v->value.stemp);
+    }
+    }
+
     void arguement_initialization(char* visibility , char *type, char *name)
     {
         variable_initialization(visibility,type,name);
-        class* c=current_class;
+        class* c=current;
         
         variable** vs=c->functions[c->top_func-1]->arg;
         int* top=&c->functions[c->top_func-1]->top_arg;
@@ -201,7 +239,7 @@
 
     void function_initiliazation( char* visibility , char *return_type, char *name)
     {
-        class *c =current_class;
+        class *c =current;
         function** fs=c->functions;
         int* top=& c->top_func;
 
@@ -256,7 +294,7 @@
        // v->parent=NULL;
         return v;
     }
-    //current_class
+    //current
 
      void print_class(class *c)
     {
@@ -433,10 +471,12 @@
 %token COMMA
 %token DOT  
 
-%token PLUS
-%token MINUS
-%token MULTIPLY
-%token DIVIDE
+//Operations
+%left  PLUS
+%left MINUS
+%left MULTIPLY
+%left DIVIDE
+%nonassoc UMINUS // Unary Minus , recognizing  negative numbers
 
 // Class Identifier
 %token <sval>  PUBLIC
@@ -468,9 +508,10 @@
 
 //data Types
 
-
-%type <sval> data_assignment
+%type <sval> variable_assignment
+%type <ival> data_value
 %type <sval> data_type
+%type <ival> expression
 
 %type <sval> VAR_NAME;
 // Function Type
@@ -493,6 +534,7 @@
 %token <sval> BOOLEAN_VALUE
 %token <sval> STRING_VALUE
 
+
 %glr-parser
 
 
@@ -505,7 +547,7 @@ program: %empty{print_program();} | class_identifier program ;
 VAR_NAME: CLASS_NAME{$$=$1;} | IDENT{$$=$1;};
 
 // Class Identifier of Only One Class
-class_identifier: PUBLIC CLASS CLASS_NAME CURLY_BRACKET_LEFT {class_initiliazation($1,$3);class_level++;current_class=find_current_class(classes[top_class-1],1);printf("CLASS %s IDENTIFIED\n",$3);}class_body CURLY_BRACKET_RIGHT { class_level--;current_class=find_current_class(classes[top_class-1],1);printf("END OF CLASS %s\n",$3);}
+class_identifier: PUBLIC CLASS CLASS_NAME CURLY_BRACKET_LEFT {class_initiliazation($1,$3);class_level++;current=find_current(classes[top_class-1],1);printf("CLASS %s IDENTIFIED\n",$3);}class_body CURLY_BRACKET_RIGHT { class_level--;current=find_current(classes[top_class-1],1);printf("END OF CLASS %s\n",$3);}
 
 
 // !! Double Check if class members before of functions
@@ -513,7 +555,7 @@ class_body: %empty |  functions class_body
 	               |  class_members class_body // intitalisation class_body
                    |  class_identifier class_body ;
 	        
-class_members:  data_declaration SEMICOLON | data_initialization SEMICOLON |   data_assignment SEMICOLON | member_access SEMICOLON | class_instance SEMICOLON;
+class_members:  data_declaration SEMICOLON | data_initialization SEMICOLON |   variable_assignment SEMICOLON | member_access SEMICOLON | class_instance SEMICOLON;
 // For the 2nd Version we need to recognise: int var = INT_Number exc.
 
 //initialisation: data_init | function_init;
@@ -532,13 +574,13 @@ dnext_bool: %empty   | COMMA VAR_NAME  { variable_initialization(visibility,"boo
 dnext_string: %empty | COMMA VAR_NAME  {  variable_initialization(visibility,"String",$2); }dnext_string;
 
 
-data_initialization:  visibility  INT  VAR_NAME EQUAL_SIGN expression  {visibility=$1;variable_initialization($1,$2,$3);}next_int|
+data_initialization:  visibility  INT  VAR_NAME EQUAL_SIGN expression  {visibility=$1;variable_initialization($1,$2,$3);var_value value;value.itemp=$5;fix_value($3,value);}next_int|
                           visibility  DOUBLE  VAR_NAME EQUAL_SIGN expression   {visibility=$1;variable_initialization($1,$2,$3);} next_double|
                           visibility  CHAR VAR_NAME EQUAL_SIGN expression     {visibility=$1;variable_initialization($1,$2,$3);} next_char|
                           visibility  BOOLEAN  VAR_NAME EQUAL_SIGN expression  {visibility=$1;variable_initialization($1,$2,$3);} next_bool|
                           visibility  STRING  VAR_NAME EQUAL_SIGN expression  {visibility=$1;variable_initialization($1,$2,$3);}next_string;
 
-next_int: %empty    | COMMA VAR_NAME EQUAL_SIGN expression  {variable_initialization(visibility,"int",$2); }next_int;
+next_int: %empty    | COMMA VAR_NAME EQUAL_SIGN expression  {variable_initialization(visibility,"int",$2);var_value value;value.itemp=$4;fix_value($2,value); }next_int;
 next_double: %empty | COMMA VAR_NAME EQUAL_SIGN expression  {variable_initialization(visibility,"double",$2);  }next_double;
 next_char: %empty   | COMMA VAR_NAME EQUAL_SIGN expression  {variable_initialization(visibility,"char",$2);  }next_char;
 next_bool: %empty   | COMMA VAR_NAME EQUAL_SIGN expression  {variable_initialization(visibility,"boolean",$2);  }next_bool;
@@ -546,13 +588,11 @@ next_string: %empty | COMMA VAR_NAME EQUAL_SIGN expression  {variable_initializa
 
 
 // This is NEW
-data_assignment:  VAR_NAME EQUAL_SIGN expression { };
 
-expression: expression PLUS term  { printf("\n addition \n");} |expression MINUS term |  BRACKET_LEFT expression  BRACKET_RIGHT | term  ;
-term:  term MULTIPLY id  { printf("\nmul\n");} | term DIVIDE id | BRACKET_LEFT term BRACKET_RIGHT | BRACKET_LEFT expression BRACKET_RIGHT | id  ;
-id: data_value  | VAR_NAME |  BRACKET_LEFT id  BRACKET_RIGHT | BRACKET_LEFT expression BRACKET_RIGHT;
+variable_assignment:  VAR_NAME EQUAL_SIGN expression {  var_value value;value.itemp=$3;fix_value($1,value); };
 
-
+expression: data_value { $$ = $1 ;} | VAR_NAME {} | expression PLUS expression { $$ = $1 + $3 ; } | expression MINUS expression { $$ = $1 - $3; }| expression MULTIPLY expression { $$ = $1 * $3; }| 
+expression DIVIDE expression{ $$ = $1 / $3 ; } | BRACKET_LEFT expression BRACKET_RIGHT { $$ = $2; }| MINUS expression %prec UMINUS { $$ = -$2; } ;
 
 data_type: INT { $$ = "int"; }  
               |DOUBLE { $$ = "double";}
@@ -560,7 +600,7 @@ data_type: INT { $$ = "int"; }
               |BOOLEAN {$$ = "boolean";}
               |STRING {$$ = "String";};
 
-data_value:  INT_VALUE | CHAR_VALUE | DOUBLE_VALUE | BOOLEAN_VALUE | STRING_VALUE ;
+data_value: INT_VALUE { $$ = $1 ;} | CHAR_VALUE { $$ = 0 ;} | DOUBLE_VALUE { $$ = $1; } | BOOLEAN_VALUE { $$ = 0;} | STRING_VALUE { $$ = 0;} ;
 
 //Class Instance
 class_instance: CLASS_NAME VAR_NAME EQUAL_SIGN NEW CLASS_NAME BRACKET_LEFT BRACKET_RIGHT {
@@ -588,11 +628,11 @@ arguments_end : %empty | COMMA arguments
 inside_void_function: inside_brackets | inside_brackets RETURN SEMICOLON ;
 inside_function: inside_brackets  RETURN VAR_NAME SEMICOLON{}  | inside_brackets RETURN data_value SEMICOLON ;
 
-function_call:  VAR_NAME BRACKET_LEFT{function_called=find_function(current_class->functions,current_class->top_func,$1);} parameters_start BRACKET_RIGHT {$$=$1;};
+function_call:  VAR_NAME BRACKET_LEFT{function_called=find_function(current->functions,current->top_func,$1);} parameters_start BRACKET_RIGHT {$$=$1;};
 
 parameters_start:%empty{printf("no parameter\n");}|parameters{check_parameter_count(function_called);parameter_count=0;} 
 parameters:
-VAR_NAME {check_parameter_type(function_called,find_variable_access(current_class->stack,current_class->top_var,$1),$1);parameter_count++;} parameters_end
+VAR_NAME {check_parameter_type(function_called,find_variable_access(current->stack,current->top_var,$1),$1);parameter_count++;} parameters_end
 |VAR_NAME DOT VAR_NAME{check_parameter_type(function_called,get_object_var($1,$3),$3);parameter_count++;} parameters_end  
 |data_value {parameter_count++;}parameters_end;
 
@@ -602,7 +642,7 @@ parameters_end:%empty
 // End Functions
 
 // !! Ambiguity !!
-inside_brackets: %empty|function_call SEMICOLON inside_brackets|functions inside_brackets | loops_n_condition inside_brackets | data_initialization  SEMICOLON inside_brackets | data_assignment SEMICOLON inside_brackets | class_instance SEMICOLON inside_brackets |member_access SEMICOLON inside_brackets ;
+inside_brackets: %empty|function_call SEMICOLON inside_brackets|functions inside_brackets | loops_n_condition inside_brackets | data_initialization  SEMICOLON inside_brackets | variable_assignment SEMICOLON inside_brackets | class_instance SEMICOLON inside_brackets |member_access SEMICOLON inside_brackets ;
 
 loops_n_condition: for_statement | switch | do_while | if  ; // + Δήλωση Μεταβλητών
 
