@@ -55,34 +55,34 @@ extern int yydebug;
     BRACKET_RIGHT = 261,           /* BRACKET_RIGHT  */
     EQUAL_SIGN = 262,              /* EQUAL_SIGN  */
     SEMICOLON = 263,               /* SEMICOLON  */
-    SINGLE_MARK = 264,             /* SINGLE_MARK  */
-    COLON = 265,                   /* COLON  */
-    COMMA = 266,                   /* COMMA  */
-    DOT = 267,                     /* DOT  */
-    PLUS = 268,                    /* PLUS  */
-    MINUS = 269,                   /* MINUS  */
-    MULTIPLY = 270,                /* MULTIPLY  */
-    DIVIDE = 271,                  /* DIVIDE  */
-    UMINUS = 272,                  /* UMINUS  */
-    PUBLIC = 273,                  /* PUBLIC  */
-    PRIVATE = 274,                 /* PRIVATE  */
-    CLASS = 275,                   /* CLASS  */
-    CLASS_NAME = 276,              /* CLASS_NAME  */
-    NEW = 277,                     /* NEW  */
-    IF = 278,                      /* IF  */
-    ELSE = 279,                    /* ELSE  */
-    FOR = 280,                     /* FOR  */
-    DO = 281,                      /* DO  */
-    WHILE = 282,                   /* WHILE  */
-    CONDITION_SYMBOL = 283,        /* CONDITION_SYMBOL  */
-    BOOL_SYMBOL = 284,             /* BOOL_SYMBOL  */
-    INCREAMENT_DECREAMENT = 285,   /* INCREAMENT_DECREAMENT  */
-    LOOP_STEP = 286,               /* LOOP_STEP  */
-    SWITCH = 287,                  /* SWITCH  */
-    CASE = 288,                    /* CASE  */
-    DEFAULT = 289,                 /* DEFAULT  */
-    BREAK = 290,                   /* BREAK  */
-    RETURN = 291,                  /* RETURN  */
+    COLON = 264,                   /* COLON  */
+    COMMA = 265,                   /* COMMA  */
+    DOT = 266,                     /* DOT  */
+    PLUS = 267,                    /* PLUS  */
+    MINUS = 268,                   /* MINUS  */
+    MULTIPLY = 269,                /* MULTIPLY  */
+    DIVIDE = 270,                  /* DIVIDE  */
+    UMINUS = 271,                  /* UMINUS  */
+    PUBLIC = 272,                  /* PUBLIC  */
+    PRIVATE = 273,                 /* PRIVATE  */
+    CLASS = 274,                   /* CLASS  */
+    CLASS_NAME = 275,              /* CLASS_NAME  */
+    NEW = 276,                     /* NEW  */
+    IF = 277,                      /* IF  */
+    ELSE = 278,                    /* ELSE  */
+    FOR = 279,                     /* FOR  */
+    DO = 280,                      /* DO  */
+    WHILE = 281,                   /* WHILE  */
+    CONDITION_SYMBOL = 282,        /* CONDITION_SYMBOL  */
+    BOOL_SYMBOL = 283,             /* BOOL_SYMBOL  */
+    INCREAMENT_DECREAMENT = 284,   /* INCREAMENT_DECREAMENT  */
+    LOOP_STEP = 285,               /* LOOP_STEP  */
+    SWITCH = 286,                  /* SWITCH  */
+    CASE = 287,                    /* CASE  */
+    DEFAULT = 288,                 /* DEFAULT  */
+    BREAK = 289,                   /* BREAK  */
+    RETURN = 290,                  /* RETURN  */
+    PRINT = 291,                   /* PRINT  */
     IDENT = 292,                   /* IDENT  */
     VOID = 293,                    /* VOID  */
     INT = 294,                     /* INT  */
@@ -103,7 +103,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 449 "parser.y"
+#line 451 "parser.y"
 
     int ival;
     char cval;
@@ -119,9 +119,23 @@ typedef union YYSTYPE YYSTYPE;
 # define YYSTYPE_IS_DECLARED 1
 #endif
 
+/* Location type.  */
+#if ! defined YYLTYPE && ! defined YYLTYPE_IS_DECLARED
+typedef struct YYLTYPE YYLTYPE;
+struct YYLTYPE
+{
+  int first_line;
+  int first_column;
+  int last_line;
+  int last_column;
+};
+# define YYLTYPE_IS_DECLARED 1
+# define YYLTYPE_IS_TRIVIAL 1
+#endif
+
 
 extern YYSTYPE yylval;
-
+extern YYLTYPE yylloc;
 int yyparse (void);
 
 #endif /* !YY_YY_PARSER_TAB_H_INCLUDED  */

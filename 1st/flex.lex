@@ -34,7 +34,7 @@ PRIVATE "private"
 ")" {printf("\n ) \n");return BRACKET_RIGHT;}
 "=" {printf("\n = \n");return EQUAL_SIGN;}
 ";" {printf("\n ; \n");return SEMICOLON;}
-"'" {return SINGLE_MARK;}
+
 ":" {return COLON;}
 "," {return COMMA;}
 "." {return DOT;}
@@ -44,19 +44,19 @@ PRIVATE "private"
 "*" {return MULTIPLY;}
 "/" {return DIVIDE;}
 
-
+"out.println"|"out.print" {printf("\n PRINT \n"); return PRINT;}
 {FOR} {printf("\n FOR \n"); return FOR;}
 {DO} {printf("\n DO \n"); return DO;}
-{WHILE} {return WHILE;}
-{IF} { return IF;}
-{ELSE} {return ELSE;}
+{WHILE} {printf("\n WHILE \n");return WHILE;}
+{IF} { printf("\n IF \n");return IF;}
+{ELSE} {printf("\n ELSE \n");return ELSE;}
 
 {SWITCH}  {return SWITCH;}
 {CASE}    {return CASE; }
 {DEFAULT} {return DEFAULT;}
 
-{BREAK}  {return BREAK;}
-{RETURN} { printf("\n RETURN \n"); return RETURN;}
+{BREAK}  {printf("\n BREAK \n"); return BREAK;}
+{RETURN} {printf("\n RETURN \n"); return RETURN;}
 
 "=="|"!="|">="|"<="|">"|"<" { return CONDITION_SYMBOL; }
 "&&"|"||" {return BOOL_OP;}
@@ -79,7 +79,7 @@ PRIVATE "private"
 
 [+|-]?[0-9]+ {return INT_VALUE;}
 [+|-]?[0-9]+[.][0-9]+[d] {return DOUBLE_VALUE;}
-['](([ -~]?)|([\\][nt]?))['] {return CHAR_VALUE;}
+['](([ -~]?)|([\\][nts]?))['] {return CHAR_VALUE;}
 ["][ -~]*["] {return STRING_VALUE;}
 {TRUE}|{FALSE} {return BOOLEAN_VALUE;}
 [A-Za-z_][A-Za-z0-9_]* {printf("\nIDENT\n");return IDENT;}

@@ -14,7 +14,6 @@ void yyerror(const char *s);
 %token BRACKET_RIGHT
 %token EQUAL_SIGN
 %token SEMICOLON
-%token SINGLE_MARK
 %token COLON
 %token COMMA
 %token DOT  
@@ -49,6 +48,7 @@ void yyerror(const char *s);
 
 %token BREAK 
 %token RETURN
+%token PRINT
 
 //Variable Types
 %token IDENT
@@ -117,6 +117,11 @@ variable_value:  INT_VALUE | CHAR_VALUE | DOUBLE_VALUE | BOOLEAN_VALUE | STRING_
 
 
 // Functions
+function_call:  VAR_NAME BRACKET_LEFT arguments_call BRACKET_RIGHT ;
+
+arguments_call: %empty | expression arguments_call_end | VAR_NAME DOT VAR_NAME arguments_call_end;
+arguments_call_end: %empty | COMMA expression arguments_call_end | COMMA VAR_NAME DOT VAR_NAME arguments_call_end;
+
 functions: function_visibility VOID VAR_NAME BRACKET_LEFT arguments BRACKET_RIGHT CURLY_BRACKET_LEFT inside_void_function CURLY_BRACKET_RIGHT 
          | function_visibility variable_type VAR_NAME BRACKET_LEFT arguments BRACKET_RIGHT CURLY_BRACKET_LEFT inside_function CURLY_BRACKET_RIGHT  {printf("\n Function is identified\n");};
 function_visibility: PRIVATE | PUBLIC 
@@ -129,32 +134,34 @@ inside_void_function: inside_brackets | inside_brackets RETURN SEMICOLON ;
 inside_function: inside_brackets  RETURN expression SEMICOLON ;
 // End Functions
 
-inside_brackets: %empty | loops_n_condition inside_brackets | class_members inside_brackets;
+inside_brackets: %empty | loops_n_condition inside_brackets | function_call SEMICOLON inside_brackets | print SEMICOLON inside_brackets | class_members inside_brackets;
 
 
 loops_n_condition: for_statement | switch | do_while | if ; 
 
 // For Loop
-for_statement:  FOR BRACKET_LEFT for_condition BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT  {printf("\n For is identified\n");};
+for_statement:  FOR BRACKET_LEFT for_condition BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets_loop CURLY_BRACKET_RIGHT  {printf("\n For is identified\n");};
 for_condition:  for_variable SEMICOLON condition SEMICOLON for_step ;
 
 for_variable: %empty | variable_type variable_assignment  ;
 
-condition: %empty | expression CONDITION_SYMBOL expression bool_operator | BOOLEAN_VALUE;
+condition: %empty | expression CONDITION_SYMBOL expression bool_operator | VAR_NAME bool_operator | BOOLEAN_VALUE bool_operator;
 bool_operator:  %empty | BOOL_OP condition;
 
 for_step : %empty | VAR_NAME step ;
 step: INCREAMENT_DECREAMENT | LOOP_STEP expression;
+
+inside_brackets_loop :inside_brackets | inside_brackets BREAK SEMICOLON inside_brackets;
 // End For Loop
 
 // DO While Loop 
-do_while: DO CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT  WHILE BRACKET_LEFT condition BRACKET_RIGHT SEMICOLON {printf("\n Do While is identified\n");};
+do_while: DO CURLY_BRACKET_LEFT inside_brackets_loop CURLY_BRACKET_RIGHT  WHILE BRACKET_LEFT condition BRACKET_RIGHT SEMICOLON {printf("\n Do While is identified\n");};
 
 // End While Loop
 
 
 // Switch  
-switch: SWITCH BRACKET_LEFT expression BRACKET_RIGHT CURLY_BRACKET_LEFT case default CURLY_BRACKET_RIGHT {printf("\n Switch\n");};
+switch: SWITCH BRACKET_LEFT expression BRACKET_RIGHT CURLY_BRACKET_LEFT case default CURLY_BRACKET_RIGHT {printf("\n Switch is identified\n");};
 case: CASE expression COLON switch_content case |%empty
 
 switch_content: %empty | inside_brackets BREAK SEMICOLON;
@@ -164,9 +171,12 @@ default: DEFAULT COLON switch_content  |%empty ;
 // End Switch
 
 // IF 
-if: IF BRACKET_LEFT condition BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT else_if{printf("\n If is identified\n");};
-else_if: %empty | ELSE IF BRACKET_LEFT condition BRACKET_RIGHT CURLY_BRACKET_LEFT  inside_brackets CURLY_BRACKET_RIGHT else_if {printf("else if \n");} | else {printf("\n If is identified\n");};
-else: ELSE CURLY_BRACKET_LEFT  inside_brackets CURLY_BRACKET_RIGHT {printf("\n Else is identified\n");};     
+if: IF BRACKET_LEFT condition BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT else_if {printf("\n If is identified\n");};
+else_if:  ELSE IF BRACKET_LEFT condition BRACKET_RIGHT CURLY_BRACKET_LEFT  inside_brackets CURLY_BRACKET_RIGHT else_if {printf("else if \n");} | else {printf("\n else \n");};
+else: %empty  | ELSE CURLY_BRACKET_LEFT  inside_brackets CURLY_BRACKET_RIGHT {printf("\n Else is identified\n");};     
+
+print : PRINT BRACKET_LEFT STRING_VALUE after_print BRACKET_RIGHT ;
+after_print: %empty | COMMA VAR_NAME after_print;
 
 %%
 
