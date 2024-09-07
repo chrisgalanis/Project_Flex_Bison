@@ -508,7 +508,9 @@
 %type <sval> non_arithmetic_type
 %type <sval> arithmetic_type
 %type <dval> expression
-%type <sval> VAR_NAME;
+%type <sval> VAR_NAME
+
+
 // Function Type
 %type <sval> function_visibility;
 %type <sval> function_call;
@@ -524,7 +526,7 @@
 
 //data Values
 %token <ival> INT_VALUE 
-%token <cval> CHAR_VALUE
+%token <sval> CHAR_VALUE
 %token <dval> DOUBLE_VALUE
 %token <sval> BOOLEAN_VALUE
 %token <sval> STRING_VALUE
@@ -583,13 +585,28 @@ next_initialization:
 
 
 variable_assignment:  
-    VAR_NAME EQUAL_SIGN expression {value.itemp=$3;value.dtemp=$3;fix_value(find_variable(current->stack,current->top_var,$1),value,"int/double"); }
-    |VAR_NAME EQUAL_SIGN non_arithmetic_value  {value.stemp=$3;fix_value(find_variable(current->stack,current->top_var,$1),value,value_type); }
-    ;
+    VAR_NAME EQUAL_SIGN data{fix_value(find_variable(current->stack,current->top_var,$1),value,value_type); };
 
+data: expression {value.itemp=$1;value.dtemp=$1;value_type="int/double";}
+    |arithmetic_type {value.stemp=$1;}
+    /*|VAR_NAME %prec UMINUS{var* v = find_variable(current->stack,current->top_var,$1); 
+                if( v != NULL){  
+                    if(strcmp(v->type,"char") == 0) value_type="char";
+                    else if(strcmp(v->type,"boolean")== 0) value_type="boolean";
+                    else if (strcmp(v->type,"string")== 0)value_type="string";
+                    value.stemp=v->value.stemp;
+                    if(strcmp(v->type,"int") == 0 ||strcmp(v->type,"double") == 0 ) {
+                        value.itemp = v->value.itemp;
+                         value.dtemp = v->value.dtemp;
+                        value_type="int/double";
+                    }
+                }
+                else {printf("Variable(%s) ",$1); yyerror("in expression has not been initialised!\n");  exit(1);}
+                } */
+    ; 
 expression: INT_VALUE { $$ = $1 ;} 
             |DOUBLE_VALUE   { $$ = $1; }
-            | VAR_NAME{var* v = find_variable(current->stack,current->top_var,$1); 
+            |VAR_NAME{var* v = find_variable(current->stack,current->top_var,$1); 
                 if( v != NULL){  
                     if(strcmp(v->type,"int") == 0) $$ = v->value.itemp;
                     else if(strcmp(v->type,"double") == 0) $$ = v->value.dtemp;
@@ -624,15 +641,6 @@ non_arithmetic_value:
             CHAR_VALUE { $$=$1; ;value_type="char";} 
             | BOOLEAN_VALUE { $$ = $1;value_type="boolean";} 
             | STRING_VALUE { $$ = $1;value_type="string";} 
-            |VAR_NAME{var* v = find_variable(current->stack,current->top_var,$1); 
-                if( v != NULL){  
-                    if(strcmp(v->type,"char") == 0) value_type="char";
-                    else if(strcmp(v->type,"boolean")== 0) value_type="boolean";
-                    else if (strcmp(v->type,"string")== 0)value_type="string";
-                    $$=v->value.stemp;
-                }
-                else {printf("Variable(%s) ",$1); yyerror("in expression has not been initialised!\n");  exit(1);}
-                }  
             ;
 
 //Class Instance
@@ -664,13 +672,15 @@ inside_function: inside_brackets  RETURN VAR_NAME SEMICOLON{}  | inside_brackets
 function_call:  VAR_NAME BRACKET_LEFT{function_called=find_function(current->functions,current->top_func,$1);} parameters_start BRACKET_RIGHT {$$=$1;};
 
 parameters_start:%empty{printf("no parameter\n");}|parameters{check_parameter_count(function_called);parameter_count=0;} 
-parameters:
-VAR_NAME {check_parameter_type(function_called,find_variable(current->stack,current->top_var,$1),$1);parameter_count++;} parameters_end
-|VAR_NAME DOT VAR_NAME{check_parameter_type(function_called,get_object_var($1,$3),$3);parameter_count++;} parameters_end  
-|non_arithmetic_value {parameter_count++;}parameters_end;
 
-parameters_end:%empty
-|COMMA parameters
+parameters:
+    VAR_NAME {check_parameter_type(function_called,find_variable(current->stack,current->top_var,$1),$1);parameter_count++;} parameters_end
+    |VAR_NAME DOT VAR_NAME{check_parameter_type(function_called,get_object_var($1,$3),$3);parameter_count++;} parameters_end  
+    |non_arithmetic_value {parameter_count++;}parameters_end;
+
+parameters_end:
+        %empty
+        |COMMA parameters
 
 // End Functions
 
