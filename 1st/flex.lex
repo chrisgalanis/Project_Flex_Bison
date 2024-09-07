@@ -56,25 +56,25 @@ PRIVATE "private"
 {DEFAULT} {return DEFAULT;}
 
 {BREAK}  {return BREAK;}
-{RETURN} {return RETURN;}
+{RETURN} { printf("\n RETURN \n"); return RETURN;}
 
 "=="|"!="|">="|"<="|">"|"<" { return CONDITION_SYMBOL; }
-"&&"|"||" {return BOOL_SYMBOL;}
+"&&"|"||" {return BOOL_OP;}
 "++"|"--" {return INCREAMENT_DECREAMENT;}
 "+="|"-="|"*="|"/=" {return LOOP_STEP;}
 
 {VOID} {return VOID;}
-{INT} {return INT;}
-{CHAR} {return CHAR;}
-{STRING} {return STRING;}
-{DOUBLE} {return DOUBLE;}
-{BOOLEAN} {return BOOLEAN;}
+{INT} { printf("\n INT \n") ; return INT;}
+{CHAR} { printf("\n CHAR \n") ;return CHAR;}
+{STRING} { printf("\n STRING \n") ;return STRING;}
+{DOUBLE} { printf("\n DOUBLE \n") ;return DOUBLE;}
+{BOOLEAN} { printf("\n BOOLEAN \n") ; return BOOLEAN;}
 
 {PUBLIC} {printf("\nPUBLIC\n"); return PUBLIC;}
 {PRIVATE} {printf("\nPRIVATE\n"); return PRIVATE;}
 {CLASS} {printf("\nCLASS\n");return CLASS;}
 {NEW} {return NEW;}
-[A-Z][a-z]* {printf("\nCLASS NAME\n"); return CLASS_NAME;}
+[A-Z][A-Za-z0-9_]* {printf("\nCLASS NAME\n"); return CLASS_NAME;}
 
 
 [+|-]?[0-9]+ {return INT_VALUE;}

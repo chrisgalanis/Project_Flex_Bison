@@ -38,7 +38,7 @@ void yyerror(const char *s);
 %token DO
 %token WHILE
 %token CONDITION_SYMBOL
-%token BOOL_SYMBOL
+%token BOOL_OP
 %token INCREAMENT_DECREAMENT
 %token LOOP_STEP
 
@@ -73,7 +73,7 @@ void yyerror(const char *s);
 
 %%
 
-program: %empty | class_identifier program;
+program: %empty | class_identifier program ;
 
 // Class Identifier of Only One Class
 class_identifier: PUBLIC CLASS CLASS_NAME CURLY_BRACKET_LEFT class_body CURLY_BRACKET_RIGHT {printf("\nClass is identified : \n");};
@@ -84,50 +84,36 @@ class_body: %empty |  functions class_body
 	               |  class_members class_body
                    |  class_identifier class_body;
 	        
-class_members: variable_initialization SEMICOLON | variable_assignment SEMICOLON  | member_access SEMICOLON | class_instance SEMICOLON ;
+class_members: variable_decleration SEMICOLON | variable_assignment SEMICOLON  | member_access SEMICOLON | class_instance SEMICOLON ;
 
-VAR_NAME : IDENT {printf("I");} | CLASS_NAME {printf("C");};
+VAR_NAME : IDENT  | CLASS_NAME ;
 
 //Class Instance
 class_instance: CLASS_NAME VAR_NAME EQUAL_SIGN NEW CLASS_NAME BRACKET_LEFT BRACKET_RIGHT ;
 member_access: IDENT DOT IDENT parenthesis ; //End Class Instance
 parenthesis: %empty  | BRACKET_LEFT BRACKET_RIGHT;
 
+
+// Variable Decleration
+visibility : %empty | PUBLIC | PRIVATE;
+variable_decleration: visibility  variable_type VAR_NAME  ;
+ 
 variable_type: INT   
               |DOUBLE
               |CHAR
               |BOOLEAN
               |STRING ;
 
-
-
-// Note Fix Visibility
-// !! Assignement Επιπλέον, η σύνθετη παράσταση μπορεί να είναι οποιαδήποτε αριθμητική παράσταση που περιλαμβάνει τις πράξεις +, -, *, /.  
-//expressions
-
+// Variable Initilization
 variable_assignment:  VAR_NAME EQUAL_SIGN expression;
-expression: expression PLUS term |expression MINUS term |  BRACKET_LEFT expression  BRACKET_RIGHT | term  ;
-term:  term MULTIPLY id | term DIVIDE id | BRACKET_LEFT term BRACKET_RIGHT | BRACKET_LEFT expression BRACKET_RIGHT | id  ;
-id: variable_value  | VAR_NAME |  BRACKET_LEFT id  BRACKET_RIGHT | BRACKET_LEFT expression BRACKET_RIGHT;
 
-//My kostas branch
-/*variable_assignment:  VAR_NAME EQUAL_SIGN variable_value {printf("\nVariable  assign is identified\n");};
-variable_value:  expression|INT_VALUE | CHAR_VALUE | DOUBLE_VALUE | BOOLEAN_VALUE | STRING_VALUE|VAR_NAME ;
-expression:  variable_value operation variable_value {printf("\nexpression is identified\n");}
-| BRACKET_LEFT expression BRACKET_RIGHT ;
-operation: PLUS |MINUS|MULTIPLY|DIVIDE;
-variable_type: INT   
-              |DOUBLE
-              |CHAR
-              |BOOLEAN
-              |STRING ;
-*/
+expression: expression PLUS term |expression MINUS term  | term  ;
+term:  term MULTIPLY par | term DIVIDE par | par ;
+par : BRACKET_LEFT expression BRACKET_RIGHT | id;
+id: variable_value  | VAR_NAME | BRACKET_LEFT id BRACKET_RIGHT;
 
 
-/* variable_action: other | other expression_operation  other ;
-other: number | BRACKET_LEFT number expression_operation other BRACKET_RIGHT | BRACKET_LEFT number BRACKET_RIGHT; 
-expression_operation: PLUS | MINUS | DIVIDE | MULTIPLY;
-number: INT_VALUE | DOUBLE_VALUE | CHAR_VALUE | VAR_NAME; */
+variable_value:  INT_VALUE | CHAR_VALUE | DOUBLE_VALUE | BOOLEAN_VALUE | STRING_VALUE  ; 
 
 
 // Functions
@@ -140,71 +126,58 @@ parameters: variable_type VAR_NAME arguments_end
 arguments_end : %empty | COMMA parameters 
 
 inside_void_function: inside_brackets | inside_brackets RETURN SEMICOLON ;
-inside_function: inside_brackets  RETURN VAR_NAME SEMICOLON  | inside_brackets RETURN variable_value SEMICOLON ;
+inside_function: inside_brackets  RETURN expression SEMICOLON ;
 // End Functions
 
-inside_brackets: %empty | loops_n_condition inside_brackets | variable_assignment SEMICOLON ;
+inside_brackets: %empty | loops_n_condition inside_brackets | class_members inside_brackets;
 
 
-
-loops_n_condition: for_statement | switch | do_while | if | variable_initialization  SEMICOLON | variable_assignment SEMICOLON | class_instance SEMICOLON  |member_access SEMICOLON ; // + Δήλωση Μεταβλητών
+loops_n_condition: for_statement | switch | do_while | if ; 
 
 // For Loop
 for_statement:  FOR BRACKET_LEFT for_condition BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT  {printf("\n For is identified\n");};
-for_condition:  for_variable SEMICOLON for_comparison SEMICOLON for_step ;
+for_condition:  for_variable SEMICOLON condition SEMICOLON for_step ;
 
-for_variable: %empty | variable_type VAR_NAME EQUAL_SIGN variable_value  ;
+for_variable: %empty | variable_type variable_assignment  ;
 
-for_comparison: %empty | VAR_NAME CONDITION_SYMBOL comparison_value for_bool_operator;
-comparison_value: INT_VALUE | DOUBLE_VALUE | CHAR_VALUE | BOOLEAN_VALUE | VAR_NAME ;
-for_bool_operator:  %empty | BOOL_SYMBOL for_comparison;
+condition: %empty | expression CONDITION_SYMBOL expression bool_operator | BOOLEAN_VALUE;
+bool_operator:  %empty | BOOL_OP condition;
 
 for_step : %empty | VAR_NAME step ;
-step: INCREAMENT_DECREAMENT | LOOP_STEP step_value;
-step_value: INT_VALUE | DOUBLE_VALUE ;
+step: INCREAMENT_DECREAMENT | LOOP_STEP expression;
 // End For Loop
 
 // DO While Loop 
-do_while: DO CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT  WHILE BRACKET_LEFT do_condition BRACKET_RIGHT SEMICOLON {printf("\n Do While is identified\n");};
-do_condition: operand CONDITION_SYMBOL operand do_bool_operator| BOOLEAN_VALUE | VAR_NAME;
-do_bool_operator: %empty | BOOL_SYMBOL do_condition;
-operand: VAR_NAME | INT_VALUE | DOUBLE_VALUE | CHAR_VALUE | BOOLEAN_VALUE ;
-// End While Loopo
+do_while: DO CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT  WHILE BRACKET_LEFT condition BRACKET_RIGHT SEMICOLON {printf("\n Do While is identified\n");};
 
-// For the 2nd Version we need to recognise: int var = INT_Number exc.
-variable_initialization:  variable_type VAR_NAME  ;
- 
+// End While Loop
 
-variable_value:  INT_VALUE | CHAR_VALUE | DOUBLE_VALUE | BOOLEAN_VALUE | STRING_VALUE  ; 
 
 // Switch  
-switch: SWITCH BRACKET_LEFT VAR_NAME BRACKET_RIGHT CURLY_BRACKET_LEFT case default CURLY_BRACKET_RIGHT {printf("\n Switch\n");};
-case: CASE switch_value COLON switch_content case
-      |%empty
+switch: SWITCH BRACKET_LEFT expression BRACKET_RIGHT CURLY_BRACKET_LEFT case default CURLY_BRACKET_RIGHT {printf("\n Switch\n");};
+case: CASE expression COLON switch_content case |%empty
 
-switch_value: INT_VALUE | CHAR_VALUE ;
-switch_content: %empty | /*ACTUAL CONTENT*/ BREAK SEMICOLON;
+switch_content: %empty | inside_brackets BREAK SEMICOLON;
 
-default: DEFAULT COLON switch_content ;
-         |%empty
+default: DEFAULT COLON switch_content  |%empty ;
          
 // End Switch
 
 // IF 
-if: IF BRACKET_LEFT if_condition BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT else_if{printf("\n If is identified\n");};
-else_if: %empty | ELSE IF BRACKET_LEFT if_condition BRACKET_RIGHT CURLY_BRACKET_LEFT  inside_brackets CURLY_BRACKET_RIGHT else_if {printf("else if \n");} | else {printf("\n If is identified\n");};
+if: IF BRACKET_LEFT condition BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT else_if{printf("\n If is identified\n");};
+else_if: %empty | ELSE IF BRACKET_LEFT condition BRACKET_RIGHT CURLY_BRACKET_LEFT  inside_brackets CURLY_BRACKET_RIGHT else_if {printf("else if \n");} | else {printf("\n If is identified\n");};
 else: ELSE CURLY_BRACKET_LEFT  inside_brackets CURLY_BRACKET_RIGHT {printf("\n Else is identified\n");};     
-if_condition: operand  CONDITION_SYMBOL operand if_bool_operator| BOOLEAN_VALUE | VAR_NAME {printf("\n If Condition is identified\n");};
-if_bool_operator: %empty | BOOL_SYMBOL if_condition;
 
 %%
 
-int main(void)
-{
+int main() {
     yyparse();
+    printf("\n    Program has executed successfully.\n");
+    return 0;
 }
 
 void yyerror(const char *s)
 {
-    printf("Error: %s\n",s);
+    printf("\n  Error: %s\n",s);
+    exit(0);
 }
