@@ -1,7 +1,8 @@
 %{
 #include<stdio.h>
 #include "parser.tab.h"
-#define YY_USER_ACTION yylloc.first_line = yylloc.last_line = yylineno;
+extern int yylineno;
+#define YY_USER_ACTION yylloc.first_line = yylineno;
 %}
 
 INT "int"
@@ -27,6 +28,7 @@ FALSE "false"
 PUBLIC "public"
 PRIVATE "private"
 
+%option yylineno
 %%
 "{" { return CURLY_BRACKET_LEFT;}
 "}" {return CURLY_BRACKET_RIGHT;}
@@ -85,4 +87,7 @@ PRIVATE "private"
 "//"([ -~	]+) {}
 "/*"([ -~   \n]+)"*/" {}
 [ \t\n] {}
+
+[\n] {yylineno++;}
+
 %%
