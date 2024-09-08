@@ -45,9 +45,9 @@ PRIVATE "private"
 "*" {return MULTIPLY;}
 "/" {return DIVIDE;}
 
-"out.println"|"out.print" {printf("\n PRINT \n"); return PRINT;}
-{FOR} {printf("\n FOR \n"); return FOR;}
-{DO} {printf("\n DO \n"); return DO;}
+"out.println"|"out.print" { return PRINT;}
+{FOR} {return FOR;}
+{DO} { return DO;}
 {WHILE} {return WHILE;}
 {IF} { return IF;}
 {ELSE} {return ELSE;}
@@ -75,7 +75,7 @@ PRIVATE "private"
 {PRIVATE} {yylval.sval = "private";return PRIVATE;}
 {CLASS} {return CLASS;}
 {NEW} {return NEW;}
-[A-Z][a-z]* {yylval.sval = strdup(yytext);return CLASS_NAME;}
+[A-Z][A-Za-z]* {yylval.sval = strdup(yytext);return CLASS_NAME;}
 
 
 [+|-]?[0-9]+ { yylval.ival = atoi(yytext); return INT_VALUE;}

@@ -69,6 +69,7 @@
     int class_level=0;
     int parameter_count=0;
 
+    int class_error=0;
   /*PROGRAM FUNCTIONS*/  
     class* find_current(class* c,int level_counter){
      if ( c->count_child==0 || level_counter==class_level) return c;
@@ -114,14 +115,14 @@
 
     var* find_variable(var* stack[],int top_var,char *name){
         for(int i = 0; i < top_var; i++)
-            if(strcmp(stack[i]->name, name) == 0) return stack[i];
+            if(strcmp(stack[top_var-1-i]->name, name) == 0) return stack[top_var-1-i];
         return NULL;
     }
 
     var* find_variable_initialize(var* stack[],int top_var,char *name)
     {
         for(int i = 0; i < top_var; i++)
-            if(strcmp(stack[i]->name, name) == 0 && stack[i]->inside_function == function_counter) return stack[i];
+            if(strcmp(stack[top_var-1-i]->name, name) == 0 && stack[top_var-1-i]->inside_function == function_counter) return stack[top_var-1-i];
         return NULL;
     }
 
@@ -293,7 +294,7 @@
     class * create_class(char* visibility, char *name)
     {
          class* v = ( class *)malloc(sizeof( class));
-        v->name = name; // strdup is NOT used BECAUSE SEGMENTATION ERROR
+        v->name = strdup(name); 
         v->visibility = visibility;
         v->top_var=0;
         v->top_func=0;
@@ -367,6 +368,8 @@
             //if (class_level>0)c->parent=parent_stack[]
             
             push_class(cl,top,c);
+            class_level++;
+            current=find_current(classes[top_class-1],1);
         }
     }
     /*Object*/
@@ -548,21 +551,22 @@
 
 program: class_identifier  program
         |%empty{print_program();} 
-        
+        |error {yyerror("Error: statement outside of calss");} program
         ;
 
 VAR_NAME: CLASS_NAME{$$=$1;} | IDENT{$$=$1;};
 
 class_identifier: 
-PUBLIC CLASS CLASS_NAME CURLY_BRACKET_LEFT {class_initiliazation($1,$3);class_level++;current=find_current(classes[top_class-1],1);printf("CLASS %s IDENTIFIED\n",$3);}class_body CURLY_BRACKET_RIGHT { class_level--;current=find_current(classes[top_class-1],1);printf("END OF CLASS %s\n",$3);} 
+PUBLIC CLASS CLASS_NAME CURLY_BRACKET_LEFT {class_initiliazation($1,$3);printf("CLASS %s IDENTIFIED\n",$3);}class_body CURLY_BRACKET_RIGHT { class_level--;current=find_current(classes[top_class-1],1);printf("END OF CLASS %s\n",$3);} 
+|error CURLY_BRACKET_LEFT{char name[4];sprintf(name,"%d",class_error++);class_initiliazation("ERROR",name);yyerror("Error in class declaration");}class_body CURLY_BRACKET_RIGHT { class_level--;current=find_current(classes[top_class-1],1);printf("END OF CLASS ERROR\n");}
 
 ;
-
 class_body: 
     %empty 
     |  functions class_body 
     |  class_members class_body //error handled
     |  class_identifier class_body 
+    
     ;
 	        
 class_members:  
@@ -577,7 +581,7 @@ visibility:  %empty { $$ = "default"; } | PUBLIC { $$ = $1; } | PRIVATE { $$ = $
 
 variable_declaration: 
     visibility data_type VAR_NAME {visibility=$1; data_type=$2;var_initialize($1,$2,$3);} next_declaration
-    | error {yyerror("Wrong variable declaration");}
+    | error {yyerror("Error in variable declaration");}
 
 next_declaration:
     %empty    
@@ -586,7 +590,7 @@ next_declaration:
 
 variable_initialization: 
     visibility  data_type  VAR_NAME EQUAL_SIGN expression  {visibility=$1;data_type=$2;value.itemp=$5;value.dtemp=$5;var_initialize_value($1,$2,$3,value,value_type);}next_initialization
-    | error {yyerror("Wrong variable initialization");}
+    | error {yyerror("Error in variable initialization");}
     ;
 
 next_initialization:
@@ -596,7 +600,8 @@ next_initialization:
 
 variable_assignment:  
     VAR_NAME EQUAL_SIGN expression{value.itemp=$3;value.dtemp=$3;fix_value(find_variable(current->stack,current->top_var,$1),value,value_type); }
-    | error {yyerror("Wrong variable assignment");}
+    | VAR_NAME step
+    | error {yyerror("Error in variable assignment");}
     ;
 
 expression: INT_VALUE { $$ = $1 ;} 
@@ -614,7 +619,7 @@ expression: INT_VALUE { $$ = $1 ;}
                         value_type="int/double";
                     }
                 }
-                else  yyerror("Variable in expression has not been initialised!");
+                else  yyerror("Variable inside expression has not been initialised!");
                 }  
             |member_access{ var* v=instance_variable;
                 if( v != NULL){  
@@ -626,7 +631,7 @@ expression: INT_VALUE { $$ = $1 ;}
                         value_type="int/double";
                     }
                 }
-                else yyerror("Variable in expression has not been initialised!"); 
+                else yyerror("Variable inside expression has not been initialised!"); 
                 }
             | expression PLUS expression { $$ = $1 + $3 ; } 
             | expression MINUS expression { $$ = $1 - $3; }
@@ -648,15 +653,15 @@ class_instance:
 member_access: 
     VAR_NAME DOT VAR_NAME {instance_variable=get_object_var($1,$3);} 
     | VAR_NAME DOT VAR_NAME BRACKET_LEFT {function_called=get_object_func($1,$3);} parameters_start BRACKET_RIGHT
-    | error{yyerror("Wrong member access");}
+    | error{yyerror("Error in class member access");}
     ;
     
 // Functions
 functions:
-     function_visibility VOID VAR_NAME BRACKET_LEFT{function_counter++;function_initiliazation($1,"void",$3); printf("Function %s is identified\n",$3);} arguments_start BRACKET_RIGHT CURLY_BRACKET_LEFT inside_void_function CURLY_BRACKET_RIGHT  { delete_function_vars();printf("END OF function \n");}
-    |function_visibility data_type VAR_NAME BRACKET_LEFT {function_counter++;function_initiliazation($1,$2,$3); printf("Function %s is identified\n",$3);}  arguments_start BRACKET_RIGHT CURLY_BRACKET_LEFT inside_function  CURLY_BRACKET_RIGHT  { delete_function_vars();printf("END OF function \n");};
-    |error CURLY_BRACKET_LEFT{function_counter++;} inside_void_function CURLY_BRACKET_RIGHT {delete_function_vars();yyerror("Wrong function declaration");}
-    |error CURLY_BRACKET_LEFT{function_counter++;} inside_function CURLY_BRACKET_RIGHT {delete_function_vars();yyerror("Wrong function declaration");}
+     function_visibility VOID VAR_NAME BRACKET_LEFT{function_counter++;function_initiliazation($1,"void",$3); printf("Function %s IDENTIFIED\n",$3);} arguments_start BRACKET_RIGHT CURLY_BRACKET_LEFT inside_void_function CURLY_BRACKET_RIGHT  { delete_function_vars();printf("END OF function \n");}
+    |function_visibility data_type VAR_NAME BRACKET_LEFT {function_counter++;function_initiliazation($1,$2,$3); printf("Function %s IDENTIFIED\n",$3);}  arguments_start BRACKET_RIGHT CURLY_BRACKET_LEFT inside_function  CURLY_BRACKET_RIGHT  { delete_function_vars();printf("END OF function \n");};
+    |error CURLY_BRACKET_LEFT{yyerror("Error in function declaration");function_counter++;} inside_void_function CURLY_BRACKET_RIGHT {delete_function_vars();}
+    |error CURLY_BRACKET_LEFT{yyerror("Error in function declaration");function_counter++;} inside_function CURLY_BRACKET_RIGHT {delete_function_vars();}
     ;
 
 function_visibility: PRIVATE {$$ = $1;} | PUBLIC { $$ = $1;};
@@ -672,7 +677,7 @@ inside_function: inside_brackets  RETURN VAR_NAME SEMICOLON  | inside_brackets R
 
 
 function_call:  VAR_NAME BRACKET_LEFT{function_called=find_function(current->functions,current->top_func,$1);} parameters_start BRACKET_RIGHT {$$=$1;}
-                | error{yyerror("ERROR!!Wrong function call");} ;
+                | error{yyerror("Error in function call");} ;
 
 parameters_start:%empty{printf("no parameter\n");}|parameters{check_parameter_count(function_called);parameter_count=0;} 
 
@@ -695,47 +700,65 @@ inside_brackets: %empty
                 | variable_assignment SEMICOLON inside_brackets //error handled
                 | class_instance SEMICOLON inside_brackets //error handled
                 |member_access SEMICOLON inside_brackets //error handled
+                |print SEMICOLON //error handled
                  ;
 
-loops_n_condition: for_statement | switch | do_while | if | error {yyerror("Wrong Conditional/loop statement");} ; // + Δήλωση Μεταβλητών
+loops_n_condition: for_statement | switch | do_while | if ; // + Δήλωση Μεταβλητών
 
 // For Loop
-for_statement:  FOR BRACKET_LEFT for_condition BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets_loop CURLY_BRACKET_RIGHT  {printf("\n For is identified\n");};
+for_statement:  
+    FOR BRACKET_LEFT{function_counter++;printf("FOR LOOP IDENTIFIED\n");} for_condition BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets_break CURLY_BRACKET_RIGHT  {delete_function_vars();printf("END OF FOR \n");}
+    |error CURLY_BRACKET_LEFT {yyerror("Error in FOR lLOOP statement");function_counter++;}  inside_brackets_break CURLY_BRACKET_RIGHT  {delete_function_vars(); }
+    ;
+
 for_condition:  for_variable SEMICOLON condition SEMICOLON for_step ;
 
 for_variable: %empty |  variable_initialization  | variable_assignment ;
 
-condition: %empty | expression CONDITION_SYMBOL expression bool_operator | VAR_NAME bool_operator | BOOLEAN_VALUE bool_operator;
+condition: %empty | expression CONDITION_SYMBOL expression bool_operator | VAR_NAME bool_operator | BOOLEAN_VALUE bool_operator; // remove var_name and boolean value,already included in expression
 bool_operator:  %empty | BOOL_SYMBOL condition;
 
 for_step : %empty | VAR_NAME step ;
+
 step: INCREAMENT_DECREAMENT | LOOP_STEP expression;
 
-inside_brackets_loop :inside_brackets | inside_brackets BREAK SEMICOLON inside_brackets;
-// End For Loop
+inside_brackets_break :inside_brackets | inside_brackets BREAK SEMICOLON inside_brackets;
 
 // DO While Loop 
-do_while: DO CURLY_BRACKET_LEFT inside_brackets_loop CURLY_BRACKET_RIGHT  WHILE BRACKET_LEFT condition BRACKET_RIGHT SEMICOLON {printf("\n Do While is identified\n");};
-
-// End While Loop
-
+do_while: DO CURLY_BRACKET_LEFT {function_counter++;printf("DO WHILE IDENTIFIED\n");} inside_brackets_break CURLY_BRACKET_RIGHT  WHILE BRACKET_LEFT condition BRACKET_RIGHT SEMICOLON {delete_function_vars();printf("END of Do While \n");}
+        |error CURLY_BRACKET_LEFT {yyerror("Error in DO WHILE LOOP");function_counter++;}  inside_brackets_break CURLY_BRACKET_RIGHT error SEMICOLON {delete_function_vars(); }
+        ;
 
 // Switch  
-switch: SWITCH BRACKET_LEFT expression BRACKET_RIGHT CURLY_BRACKET_LEFT case default CURLY_BRACKET_RIGHT {printf("\n Switch is identified\n");};
-case: CASE expression COLON switch_content case |%empty
+switch: SWITCH BRACKET_LEFT  expression BRACKET_RIGHT CURLY_BRACKET_LEFT {function_counter++;printf("SWITCH IDENTIFIED\n");}  case default CURLY_BRACKET_RIGHT {delete_function_vars();printf("END of Switch \n");}
+        |error CURLY_BRACKET_LEFT {yyerror("Error in SWITCH statement");function_counter++;}  inside_brackets CURLY_BRACKET_RIGHT  {delete_function_vars(); }
+        ;
 
-switch_content: %empty | inside_brackets BREAK SEMICOLON;
+case: CASE expression COLON inside_brackets_break case |%empty
 
-default: DEFAULT COLON switch_content  |%empty ;
-         
-// End Switch
+
+default: DEFAULT COLON inside_brackets_break  |%empty ;
 
 // IF 
-if: IF BRACKET_LEFT condition BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT else_if {printf("\n If is identified\n");};
-else_if:  ELSE IF BRACKET_LEFT condition BRACKET_RIGHT CURLY_BRACKET_LEFT  inside_brackets CURLY_BRACKET_RIGHT else_if {printf("else if \n");} | else {printf("\n else \n");};
-else: %empty  | ELSE CURLY_BRACKET_LEFT  inside_brackets CURLY_BRACKET_RIGHT {printf("\n Else is identified\n");};     
+if: IF BRACKET_LEFT condition BRACKET_RIGHT CURLY_BRACKET_LEFT {function_counter++;printf("IF IDENTIFIED\n");}  inside_brackets CURLY_BRACKET_RIGHT  {delete_function_vars();printf(" End of If is identified\n");} else_if 
+    |error CURLY_BRACKET_LEFT {yyerror("Error in IF statement");function_counter++;}  inside_brackets CURLY_BRACKET_RIGHT  {delete_function_vars(); }
+    ;
 
-print : PRINT BRACKET_LEFT STRING_VALUE after_print BRACKET_RIGHT ;
+else_if:ELSE IF BRACKET_LEFT condition BRACKET_RIGHT CURLY_BRACKET_LEFT{function_counter++;printf("ELSE IF IDENTIFIED\n");}   inside_brackets CURLY_BRACKET_RIGHT {delete_function_vars();printf("End of else if \n");} else_if 
+        |error CURLY_BRACKET_LEFT {yyerror("Error in IF ELSE statement");function_counter++;printf("ELSE IDENTIFIED\n");}  inside_brackets CURLY_BRACKET_RIGHT  {delete_function_vars(); }
+        | else 
+        ;
+
+else: %empty  
+    | ELSE CURLY_BRACKET_LEFT {function_counter++;} inside_brackets CURLY_BRACKET_RIGHT {delete_function_vars();printf("End of Else is identified\n");}   
+    |error CURLY_BRACKET_LEFT {yyerror("Error in ELSE statement");function_counter++;}  inside_brackets CURLY_BRACKET_RIGHT  {delete_function_vars(); }
+    ;
+
+//PRINT
+print : PRINT BRACKET_LEFT STRING_VALUE after_print BRACKET_RIGHT {printf("PRINT IDENTIFIED\n");}
+        |error {yyerror("Error in PRINT statement");}
+        ;
+
 after_print: %empty | COMMA VAR_NAME after_print;
             
 %%
