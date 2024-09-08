@@ -564,18 +564,19 @@ PUBLIC CLASS CLASS_NAME CURLY_BRACKET_LEFT {class_initiliazation($1,$3);printf("
 class_body: 
     %empty 
     |  functions class_body 
-    |  class_members class_body //error handled
+    |  class_members_semicolon class_body //error handled
     |  class_identifier class_body 
     
     ;
 	        
 class_members:  
-    variable_declaration SEMICOLON //error handled
-    | variable_initialization SEMICOLON //error handled
-    |  variable_assignment SEMICOLON //error handled
-    | member_access SEMICOLON //error handled
-    | class_instance SEMICOLON //error handled
+    variable_declaration  //error handled
+    | variable_initialization  //error handled
     ;
+
+class_members_semicolon: class_members SEMICOLON |class_members error {yyerror("Missing semicolon");}
+
+
 
 visibility:  %empty { $$ = "default"; } | PUBLIC { $$ = $1; } | PRIVATE { $$ = $1; } ;
 
@@ -639,6 +640,7 @@ expression: INT_VALUE { $$ = $1 ;}
             | expression DIVIDE expression	{ if ($3==0) yyerror("Cannot divide by zero"); else $$ = $1 / (float)$3;}
             | BRACKET_LEFT expression BRACKET_RIGHT { $$ = $2; }
             | MINUS expression %prec UMINUS { $$ = -$2; } 
+            | PLUS expression %prec UMINUS {$$ = $2;}
             ;
 
 
@@ -660,8 +662,7 @@ member_access:
 functions:
      function_visibility VOID VAR_NAME BRACKET_LEFT{function_counter++;function_initiliazation($1,"void",$3); printf("Function %s IDENTIFIED\n",$3);} arguments_start BRACKET_RIGHT CURLY_BRACKET_LEFT inside_void_function CURLY_BRACKET_RIGHT  { delete_function_vars();printf("END OF function \n");}
     |function_visibility data_type VAR_NAME BRACKET_LEFT {function_counter++;function_initiliazation($1,$2,$3); printf("Function %s IDENTIFIED\n",$3);}  arguments_start BRACKET_RIGHT CURLY_BRACKET_LEFT inside_function  CURLY_BRACKET_RIGHT  { delete_function_vars();printf("END OF function \n");};
-    |error CURLY_BRACKET_LEFT{yyerror("Error in function declaration");function_counter++;} inside_void_function CURLY_BRACKET_RIGHT {delete_function_vars();}
-    |error CURLY_BRACKET_LEFT{yyerror("Error in function declaration");function_counter++;} inside_function CURLY_BRACKET_RIGHT {delete_function_vars();}
+    | VOID error{yyerror("Error in function declaratiob");} CURLY_BRACKET_LEFT CURLY_BRACKET_RIGHT 
     ;
 
 function_visibility: PRIVATE {$$ = $1;} | PUBLIC { $$ = $1;};
@@ -688,22 +689,25 @@ parameters:
 
 parameters_end:%empty|COMMA parameters
 
-// End Functions
+statement: function_call  
+        | variable_declaration   
+        | variable_initialization    
+        | variable_assignment  
+        | class_instance 
+        |member_access 
+        |print     
+        ;
+
+statement_semicolon: statement SEMICOLON | statement error{ yyerror("Error missing semicolon");};
 
 // !! Ambiguity !!
 inside_brackets: %empty
-                |function_call SEMICOLON inside_brackets//error handled
+                |statement_semicolon inside_brackets
                 |functions inside_brackets 
                 | loops_n_condition inside_brackets 
-                | variable_declaration SEMICOLON inside_brackets //error handled
-                | variable_initialization  SEMICOLON inside_brackets //error handled
-                | variable_assignment SEMICOLON inside_brackets //error handled
-                | class_instance SEMICOLON inside_brackets //error handled
-                |member_access SEMICOLON inside_brackets //error handled
-                |print SEMICOLON //error handled
-                 ;
+                ;
 
-loops_n_condition: for_statement | switch | do_while | if ; // + Δήλωση Μεταβλητών
+loops_n_condition: for_statement | switch | do_while | if ; 
 
 // For Loop
 for_statement:  
@@ -756,7 +760,7 @@ else: %empty
 
 //PRINT
 print : PRINT BRACKET_LEFT STRING_VALUE after_print BRACKET_RIGHT {printf("PRINT IDENTIFIED\n");}
-        |error {yyerror("Error in PRINT statement");}
+        |PRINT error {yyerror("Error in PRINT statement");}
         ;
 
 after_print: %empty | COMMA VAR_NAME after_print;
