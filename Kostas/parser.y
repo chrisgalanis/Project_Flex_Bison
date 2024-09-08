@@ -131,8 +131,8 @@
         var** vs=c->stack;
         int* top=& c->top_var;
 
-        //printf("BEFORE FUNCTION VAR DELETION\n");
-        //print_stack_variable( vs,*top);
+        printf("BEFORE FUNCTION VAR DELETION\n");
+        print_stack_variable( vs,*top);
         while(*top != 0  && vs[(*top)-1]->inside_function == function_counter ){
            pop_var(vs,top);
         }
@@ -505,10 +505,10 @@
 //data Types
 
 %type <sval> variable_assignment
-%type <sval> non_arithmetic_value
+//%type <sval> non_arithmetic_value
 %type <sval> data_type
-%type <sval> non_arithmetic_type
-%type <sval> arithmetic_type
+//%type <sval> non_arithmetic_type
+//%type <sval> arithmetic_type
 %type <dval> expression
 %type <sval> VAR_NAME
 
@@ -561,89 +561,70 @@ class_members:  variable_declaration SEMICOLON | variable_initialization SEMICOL
 
 visibility:  %empty { $$ = "default"; } | PUBLIC { $$ = $1; } | PRIVATE { $$ = $1; } ;
 
-variable_declaration: visibility data_type VAR_NAME {visibility=$1; data_type=$2;var_initialize($1,$2,$3);} next_declaration;
-next_declaration:%empty    | COMMA VAR_NAME { var_initialize(visibility,data_type,$2);} next_declaration;
+variable_declaration: 
+    visibility data_type VAR_NAME {visibility=$1; data_type=$2;var_initialize($1,$2,$3);} next_declaration
+    | error {yyerror("Wrong variable declaration");}
 
+next_declaration:
+    %empty    
+    | COMMA VAR_NAME { var_initialize(visibility,data_type,$2);} next_declaration
+    ;
 
 variable_initialization: 
-    visibility  arithmetic_type  VAR_NAME EQUAL_SIGN expression  {visibility=$1;data_type=$2;value.itemp=$5;value.dtemp=$5;var_initialize_value($1,$2,$3,value,"int/double");}next_initialization_exp
-    |visibility  non_arithmetic_type  VAR_NAME EQUAL_SIGN non_arithmetic_value {visibility=$1;data_type=$2;value.stemp=$5;var_initialize_value($1,$2,$3,value,value_type);}next_initialization
+    visibility  data_type  VAR_NAME EQUAL_SIGN expression  {visibility=$1;data_type=$2;value.itemp=$5;value.dtemp=$5;var_initialize_value($1,$2,$3,value,value_type);}next_initialization
+    | error {yyerror("Wrong variable initialization");}
     ;
-
-next_initialization_exp:
-    %empty    
-    | COMMA VAR_NAME EQUAL_SIGN expression  {value.itemp=$4;value.dtemp=$4;var_initialize_value(visibility,data_type,$2,value,"int/double"); }next_initialization_exp
-    ;
-
 
 next_initialization:
     %empty    
-    | COMMA VAR_NAME EQUAL_SIGN non_arithmetic_value  {value.stemp=$4;var_initialize_value(visibility,data_type,$2,value,value_type);}next_initialization
+    | COMMA VAR_NAME EQUAL_SIGN expression  {value.itemp=$4;value.dtemp=$4;var_initialize_value(visibility,data_type,$2,value,value_type); }next_initialization
     ;
 
-//comments: COMMENT { class* c=current; print_stack_variable(c->stack, c->top_var); }
-
 variable_assignment:  
-    VAR_NAME EQUAL_SIGN data    {fix_value(find_variable(current->stack,current->top_var,$1),value,value_type); };
+    VAR_NAME EQUAL_SIGN expression{value.itemp=$3;value.dtemp=$3;fix_value(find_variable(current->stack,current->top_var,$1),value,value_type); }
+    | error {yyerror("Wrong variable assignment");}
+    ;
 
-data: expression {value.itemp=$1;value.dtemp=$1;value_type="int/double";}
-    |   non_arithmetic_value {value.stemp=$1;}
-    /*|VAR_NAME %prec UMINUS{var* v = find_variable(current->stack,current->top_var,$1); 
+expression: INT_VALUE { $$ = $1 ;} 
+            |DOUBLE_VALUE   { $$ = $1; }
+            |CHAR_VALUE { $$=0; value_type="char";value.stemp=$1;} 
+            |BOOLEAN_VALUE { $$ = 0;value_type="boolean";value.stemp=$1;} 
+            |STRING_VALUE { $$ = 0;value_type="String";value.stemp=$1;} 
+            |VAR_NAME{var* v = find_variable(current->stack,current->top_var,$1); 
                 if( v != NULL){  
-                    if(strcmp(v->type,"char") == 0) value_type="char";
-                    else if(strcmp(v->type,"boolean")== 0) value_type="boolean";
-                    else if (strcmp(v->type,"string")== 0)value_type="string";
+                    value_type=v->type;
                     value.stemp=v->value.stemp;
                     if(strcmp(v->type,"int") == 0 ||strcmp(v->type,"double") == 0 ) {
-                        value.itemp = v->value.itemp;
-                         value.dtemp = v->value.dtemp;
+                        $$= v->value.itemp;
+                        $$= v->value.dtemp;
                         value_type="int/double";
                     }
                 }
-                else {printf("Variable(%s) ",$1); yyerror("in expression has not been initialised!\n");  exit(1);}
-                } */
-    ; 
-expression:     INT_VALUE { $$ = $1 ;} | DOUBLE_VALUE   { $$ = $1; }
-            |   VAR_NAME   
-                {
-                    var* v = find_variable(current->stack,current->top_var,$1); 
-                    if( v != NULL){  
-                        if(strcmp(v->type,"int") == 0) $$ = v->value.itemp;
-                        else if(strcmp(v->type,"double") == 0) $$ = v->value.dtemp;
-                        else {printf("Variable(%s) ",$1); yyerror("is NOT  double/int type!");  exit(0);}
-                    }
-                    else {printf("Variable(%s) ",$1); yyerror("in expression has not been initialised!");  exit(0);}
+                else  yyerror("Variable in expression has not been initialised!");
                 }  
-            |   member_access
-                {
-                    var* v=instance_variable;
-                    if( v != NULL){  
-                        if(strcmp(v->type,"int") == 0) $$ = v->value.itemp;
-                        else if(strcmp(v->type,"double") == 0) $$ = v->value.dtemp;
-                        else { yyerror("Instance var is NOT  double/int type!");  exit(0);}
+            |member_access{ var* v=instance_variable;
+                if( v != NULL){  
+                    value_type=v->type;
+                    value.stemp=v->value.stemp;
+                    if(strcmp(v->type,"int") == 0 ||strcmp(v->type,"double") == 0 ) {
+                        $$= v->value.itemp;
+                        $$= v->value.dtemp;
+                        value_type="int/double";
                     }
-                    else { yyerror("Instance var in expression has not been initialised!");  exit(0);}
                 }
-            |   expression PLUS expression { $$ = $1 + $3 ; } 
-            |   expression MINUS expression { $$ = $1 - $3; }
-            |   expression MULTIPLY expression { $$ = $1 * $3; }
-            |   expression DIVIDE expression    { if ($3==0) yyerror("divide by zero"); else $$ = $1 / (float)$3;}
-            |   BRACKET_LEFT expression BRACKET_RIGHT { $$ = $2; }
-            |   MINUS expression %prec UMINUS { $$ = -$2; } 
+                else yyerror("Variable in expression has not been initialised!"); 
+                }
+            | expression PLUS expression { $$ = $1 + $3 ; } 
+            | expression MINUS expression { $$ = $1 - $3; }
+            | expression MULTIPLY expression { $$ = $1 * $3; }
+            | expression DIVIDE expression	{ if ($3==0) yyerror("Cannot divide by zero"); else $$ = $1 / (float)$3;}
+            | BRACKET_LEFT expression BRACKET_RIGHT { $$ = $2; }
+            | MINUS expression %prec UMINUS { $$ = -$2; } 
             ;
 
 
-data_type: arithmetic_type {$$=$1;}| non_arithmetic_type{$$=$1;};
+data_type: INT { $$ = "int"; } | DOUBLE { $$ = "double";} | CHAR { $$ = "char";}|BOOLEAN {$$ = "boolean";}|STRING {$$ = "String";};
               
-arithmetic_type:INT { $$ = "int"; } | DOUBLE { $$ = "double";}
-
-non_arithmetic_type:CHAR { $$ = "char";}|BOOLEAN {$$ = "boolean";}|STRING {$$ = "String";};
-
-non_arithmetic_value: 
-            CHAR_VALUE { $$=$1; ;value_type="char";} 
-            | BOOLEAN_VALUE { $$ = $1;value_type="boolean";} 
-            | STRING_VALUE { $$ = $1;value_type="String";} 
-            ;
 
 //Class Instance
 class_instance: CLASS_NAME VAR_NAME EQUAL_SIGN NEW CLASS_NAME BRACKET_LEFT BRACKET_RIGHT {
@@ -669,7 +650,7 @@ arguments_end : %empty | COMMA arguments
 
 
 inside_void_function: inside_brackets | inside_brackets RETURN SEMICOLON ;
-inside_function: inside_brackets  RETURN VAR_NAME SEMICOLON{}  | inside_brackets RETURN non_arithmetic_value SEMICOLON ;
+inside_function: inside_brackets  RETURN expression SEMICOLON ;
 
 function_call:  VAR_NAME BRACKET_LEFT{function_called=find_function(current->functions,current->top_func,$1);} parameters_start BRACKET_RIGHT {$$=$1;};
 
@@ -678,7 +659,7 @@ parameters_start:%empty{printf("no parameter\n");}| parameters{check_parameter_c
 parameters:
     VAR_NAME {check_parameter_type(function_called,find_variable(current->stack,current->top_var,$1),$1);parameter_count++;} parameters_end
     |VAR_NAME DOT VAR_NAME{check_parameter_type(function_called,get_object_var($1,$3),$3);parameter_count++;} parameters_end  
-    |non_arithmetic_value {parameter_count++;}parameters_end;
+    |expression {parameter_count++;}parameters_end;
 
 parameters_end:
         %empty
@@ -692,8 +673,8 @@ inside_brackets: %empty | loops_n_condition {function_counter++;} inside_bracket
 loops_n_condition: for_statement | switch | do_while | if  ; 
 
 // For Loop
-for_statement:  FOR BRACKET_LEFT for_condition BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets_loop CURLY_BRACKET_RIGHT  {printf("\n For is identified\n");};
-for_condition:  for_variable SEMICOLON condition SEMICOLON for_step ;
+for_statement:  FOR BRACKET_LEFT{function_counter++;} for_condition BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets_loop CURLY_BRACKET_RIGHT {delete_function_vars();function_counter--;} {printf("\n For is identified\n");};
+for_condition:  for_variable SEMICOLON  condition SEMICOLON for_step ;
 
 for_variable: %empty |  variable_initialization  | variable_assignment ;
 
