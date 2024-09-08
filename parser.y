@@ -726,7 +726,7 @@ for_step : %empty | VAR_NAME step ;
 
 step: INCREAMENT_DECREAMENT | LOOP_STEP expression;
 
-inside_brackets_break :inside_brackets | inside_brackets BREAK SEMICOLON inside_brackets;
+inside_brackets_break :inside_brackets | inside_brackets BREAK SEMICOLON inside_brackets ;
 
 // DO While Loop 
 do_while: DO CURLY_BRACKET_LEFT {function_counter++;printf("DO WHILE IDENTIFIED\n");} inside_brackets_break CURLY_BRACKET_RIGHT  WHILE BRACKET_LEFT condition BRACKET_RIGHT SEMICOLON {delete_function_vars();printf("END of Do While \n");}
@@ -745,11 +745,11 @@ default: DEFAULT COLON inside_brackets_break  |%empty ;
 
 // IF 
 if: IF BRACKET_LEFT condition BRACKET_RIGHT CURLY_BRACKET_LEFT {function_counter++;printf("IF IDENTIFIED\n");}  inside_brackets CURLY_BRACKET_RIGHT  {delete_function_vars();printf(" End of If is identified\n");} else_if 
-    |error CURLY_BRACKET_LEFT {yyerror("Error in IF statement");function_counter++;}  inside_brackets CURLY_BRACKET_RIGHT  {delete_function_vars(); }
+    |IF BRACKET_LEFT error CURLY_BRACKET_LEFT {yyerror("Error in IF statement");function_counter++;}  inside_brackets CURLY_BRACKET_RIGHT  {delete_function_vars(); } else_if
     ;
 
 else_if:ELSE IF BRACKET_LEFT condition BRACKET_RIGHT CURLY_BRACKET_LEFT{function_counter++;printf("ELSE IF IDENTIFIED\n");}   inside_brackets CURLY_BRACKET_RIGHT {delete_function_vars();printf("End of else if \n");} else_if 
-        |error CURLY_BRACKET_LEFT {yyerror("Error in IF ELSE statement");function_counter++;printf("ELSE IDENTIFIED\n");}  inside_brackets CURLY_BRACKET_RIGHT  {delete_function_vars(); }
+        |ELSE IF BRACKET_LEFT error CURLY_BRACKET_LEFT {yyerror("Error in IF ELSE statement");function_counter++;printf("ELSE IDENTIFIED\n");}  inside_brackets CURLY_BRACKET_RIGHT  {delete_function_vars(); }else_if
         | else 
         ;
 
