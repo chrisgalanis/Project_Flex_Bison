@@ -589,9 +589,7 @@ expression: INT_VALUE { $$ = $1 ;}
             |STRING_VALUE { $$ = 0;value_type="string";value.stemp=$1;} 
             |VAR_NAME{var* v = find_variable(current->stack,current->top_var,$1); 
                 if( v != NULL){  
-                    if(strcmp(v->type,"char") == 0) value_type="char";
-                    else if(strcmp(v->type,"boolean")== 0) value_type="boolean";
-                    else if (strcmp(v->type,"string")== 0)value_type="string";
+                    value_type=v->type;
                     value.stemp=v->value.stemp;
                     if(strcmp(v->type,"int") == 0 ||strcmp(v->type,"double") == 0 ) {
                         $$= v->value.itemp;
@@ -603,9 +601,7 @@ expression: INT_VALUE { $$ = $1 ;}
                 }  
             |member_access{ var* v=instance_variable;
                 if( v != NULL){  
-                    if(strcmp(v->type,"char") == 0) value_type="char";
-                    else if(strcmp(v->type,"boolean")== 0) value_type="boolean";
-                    else if (strcmp(v->type,"string")== 0)value_type="string";
+                   value_type=v->type;
                     value.stemp=v->value.stemp;
                     if(strcmp(v->type,"int") == 0 ||strcmp(v->type,"double") == 0 ) {
                         $$= v->value.itemp;
