@@ -1,0 +1,15 @@
+
+
+public class A
+{
+   int x ;
+   double m=4.0d;
+   char c,k;
+
+   k = - 'a';
+   k = + 'b';
+   c= 'a' + 'b';
+   
+}
+
+
