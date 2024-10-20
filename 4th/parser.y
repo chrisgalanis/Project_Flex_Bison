@@ -553,7 +553,7 @@
 
 program: class_identifier  program
         |%empty{print_program();} 
-        |error {yyerror("Error: statement outside of class");} program
+        |error {} program
         ;
 
 VAR_NAME: CLASS_NAME{$$=$1;} | IDENT{$$=$1;};
@@ -589,11 +589,12 @@ variable_declaration:
 next_declaration:
     %empty    
     | COMMA VAR_NAME { var_initialize(visibility,data_type,$2);} next_declaration
+    | error {yyerror("Error in initiliasation multiple variables"); yyerrok;}
     ;
 
 variable_initialization: 
     visibility  data_type  VAR_NAME EQUAL_SIGN expression  {visibility=$1;data_type=$2;value.itemp=$5;value.dtemp=$5;var_initialize_value($1,$2,$3,value,value_type);}next_initialization
-    | error {yyerror("Error in variable initialization/decleration"); yyerrok;}
+    | error {yyerror("Error in variable initialization/decleration"); yyerrok; }
     ;
 
 next_initialization:
@@ -604,7 +605,7 @@ next_initialization:
 variable_assignment:  
     VAR_NAME EQUAL_SIGN expression{value.itemp=$3;value.dtemp=$3;fix_value(find_variable(current->stack,current->top_var,$1),value,value_type); }
     | VAR_NAME step
-    | error {yyerror("Error in variable assignment"); yyerrok;}
+    | error {yyerror("Error in variable assignment"); yyerrok; }
     ;
 
 expression: INT_VALUE { $$ = $1 ;} 
@@ -651,20 +652,20 @@ data_type: INT { $$ = "int"; } | DOUBLE { $$ = "double";} | CHAR { $$ = "char";}
 //Class Instance
 class_instance: 
     CLASS_NAME VAR_NAME EQUAL_SIGN NEW CLASS_NAME BRACKET_LEFT BRACKET_RIGHT {if(strcmp($1,$5)==0)object_initiliazation($2,$1);else  yyerror("ERROR!!Invalid initiliazation of instance");}
-    |error {yyerror("ERROR!!Invalid initiliazation of instance"); yyerrok;}
+    |error {yyerror("ERROR!!Invalid initiliazation of instance"); yyerrok; }
     ;
 
 member_access: 
     VAR_NAME DOT VAR_NAME {instance_variable=get_object_var($1,$3);} 
     | VAR_NAME DOT VAR_NAME BRACKET_LEFT {function_called=get_object_func($1,$3);} parameters_start BRACKET_RIGHT
-    | error{yyerror("Error in class member access");yyerrok;}
+    | error{yyerror("Error in class member access");yyerrok; }
     ;
     
 // Functions
 functions:
      function_visibility VOID VAR_NAME BRACKET_LEFT{function_counter++;function_initiliazation($1,"void",$3); printf("Function %s IDENTIFIED\n",$3);} arguments_start BRACKET_RIGHT CURLY_BRACKET_LEFT inside_void_function CURLY_BRACKET_RIGHT  { delete_function_vars();printf("END OF function \n");}
     |function_visibility data_type VAR_NAME BRACKET_LEFT {function_counter++;function_initiliazation($1,$2,$3); printf("Function %s IDENTIFIED\n",$3);}  arguments_start BRACKET_RIGHT CURLY_BRACKET_LEFT inside_function  CURLY_BRACKET_RIGHT  { delete_function_vars();printf("END OF function \n");};
-    | VOID error{yyerror("Error in function declaratiob");yyerrok;} CURLY_BRACKET_LEFT CURLY_BRACKET_RIGHT 
+    | VOID error{yyerror("Error in function declaratiob");yyerrok; } CURLY_BRACKET_LEFT CURLY_BRACKET_RIGHT 
     ;
 
 function_visibility: PRIVATE {$$ = $1;} | PUBLIC { $$ = $1;};
@@ -680,7 +681,7 @@ inside_function: inside_brackets  RETURN VAR_NAME SEMICOLON  | inside_brackets R
 
 
 function_call:  VAR_NAME BRACKET_LEFT{function_called=find_function(current->functions,current->top_func,$1);} parameters_start BRACKET_RIGHT {$$=$1;}
-                | error{yyerror("Error in function call");yyerrok;} ;
+                | error{yyerror("Error in function call");yyerrok; } ;
 
 parameters_start:%empty{printf("no parameter\n");}|parameters{check_parameter_count(function_called);parameter_count=0;} 
 
@@ -700,7 +701,7 @@ statement: function_call
         |print     
         ;
 
-statement_semicolon: statement SEMICOLON | statement error{ yyerror("Error missing semicolon");yyerrok;};
+statement_semicolon: statement SEMICOLON | statement error{ yyerror("Error missing semicolon");yyerrok; };
 
 // !! Ambiguity !!
 inside_brackets: %empty
@@ -714,7 +715,7 @@ loops_n_condition: for_statement | switch | do_while | if ;
 // For Loop
 for_statement:  
     FOR BRACKET_LEFT{function_counter++;printf("FOR LOOP IDENTIFIED\n");} for_condition BRACKET_RIGHT CURLY_BRACKET_LEFT inside_brackets_break CURLY_BRACKET_RIGHT  {delete_function_vars();printf("END OF FOR \n");}
-    |error CURLY_BRACKET_LEFT {yyerror("Error in FOR lLOOP statement");function_counter++;yyerrok;}  inside_brackets_break CURLY_BRACKET_RIGHT  {delete_function_vars(); }
+    | error CURLY_BRACKET_LEFT {yyerror("Error in FOR lLOOP statement");function_counter++;yyerrok; }  inside_brackets_break CURLY_BRACKET_RIGHT  {delete_function_vars(); }
     ;
 
 for_condition:  for_variable SEMICOLON condition SEMICOLON for_step ;
@@ -732,12 +733,12 @@ inside_brackets_break :inside_brackets | inside_brackets BREAK SEMICOLON inside_
 
 // DO While Loop 
 do_while: DO CURLY_BRACKET_LEFT {function_counter++;printf("DO WHILE IDENTIFIED\n");} inside_brackets_break CURLY_BRACKET_RIGHT  WHILE BRACKET_LEFT condition BRACKET_RIGHT SEMICOLON {delete_function_vars();printf("END of Do While \n");}
-        |error CURLY_BRACKET_LEFT {yyerror("Error in DO WHILE LOOP");function_counter++;yyerrok;}  inside_brackets_break CURLY_BRACKET_RIGHT error SEMICOLON {delete_function_vars(); }
+        |error CURLY_BRACKET_LEFT {yyerror("Error in DO WHILE LOOP");function_counter++;yyerrok; }  inside_brackets_break CURLY_BRACKET_RIGHT error SEMICOLON {delete_function_vars(); }
         ;
 
 // Switch  
 switch: SWITCH BRACKET_LEFT  expression BRACKET_RIGHT CURLY_BRACKET_LEFT {function_counter++;printf("SWITCH IDENTIFIED\n");}  case default CURLY_BRACKET_RIGHT {delete_function_vars();printf("END of Switch \n");}
-        |error CURLY_BRACKET_LEFT {yyerror("Error in SWITCH statement");function_counter++;yyerrok;}  inside_brackets CURLY_BRACKET_RIGHT  {delete_function_vars(); }
+        |error CURLY_BRACKET_LEFT {yyerror("Error in SWITCH statement");function_counter++;yyerrok; }  inside_brackets CURLY_BRACKET_RIGHT  {delete_function_vars(); }
         ;
 
 case: CASE expression COLON inside_brackets_break case |%empty
@@ -747,22 +748,22 @@ default: DEFAULT COLON inside_brackets_break  |%empty ;
 
 // IF 
 if: IF BRACKET_LEFT condition BRACKET_RIGHT CURLY_BRACKET_LEFT {function_counter++;printf("IF IDENTIFIED\n");}  inside_brackets CURLY_BRACKET_RIGHT  {delete_function_vars();printf(" End of If is identified\n");} else_if 
-    |IF BRACKET_LEFT error CURLY_BRACKET_LEFT {yyerror("Error in IF statement");function_counter++;yyerrok;}  inside_brackets CURLY_BRACKET_RIGHT  {delete_function_vars(); } else_if
+    |IF BRACKET_LEFT error CURLY_BRACKET_LEFT {yyerror("Error in IF statement");function_counter++;yyerrok; }  inside_brackets CURLY_BRACKET_RIGHT  {delete_function_vars(); } else_if
     ;
 
 else_if:ELSE IF BRACKET_LEFT condition BRACKET_RIGHT CURLY_BRACKET_LEFT{function_counter++;printf("ELSE IF IDENTIFIED\n");}   inside_brackets CURLY_BRACKET_RIGHT {delete_function_vars();printf("End of else if \n");} else_if 
-        |ELSE IF BRACKET_LEFT error CURLY_BRACKET_LEFT {yyerror("Error in IF ELSE statement");function_counter++;printf("ELSE IDENTIFIED\n");yyerrok;}  inside_brackets CURLY_BRACKET_RIGHT  {delete_function_vars(); }else_if
+        |ELSE IF BRACKET_LEFT error CURLY_BRACKET_LEFT {yyerror("Error in IF ELSE statement");function_counter++;printf("ELSE IDENTIFIED\n");yyerrok; }  inside_brackets CURLY_BRACKET_RIGHT  {delete_function_vars(); }else_if
         | else 
         ;
 
 else: %empty  
     | ELSE CURLY_BRACKET_LEFT {function_counter++;} inside_brackets CURLY_BRACKET_RIGHT {delete_function_vars();printf("End of Else is identified\n");}   
-    |error CURLY_BRACKET_LEFT {yyerror("Error in ELSE statement");function_counter++;yyerrok;}  inside_brackets CURLY_BRACKET_RIGHT  {delete_function_vars(); }
+    |error CURLY_BRACKET_LEFT {yyerror("Error in ELSE statement");function_counter++;yyerrok; }  inside_brackets CURLY_BRACKET_RIGHT  {delete_function_vars(); }
     ;
 
 //PRINT
 print : PRINT BRACKET_LEFT STRING_VALUE after_print BRACKET_RIGHT {printf("PRINT IDENTIFIED\n");}
-        |PRINT error {yyerror("Error in PRINT statement");yyerrok;}
+        |PRINT error {yyerror("Error in PRINT statement");yyerrok; }
         ;
 
 after_print: %empty | COMMA VAR_NAME after_print;

@@ -1,1 +1,4 @@
-Sources/
+*
+!*.txt
+!*.lex
+!*.y

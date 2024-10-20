@@ -1,11 +1,13 @@
 public class  Ab 
 {
-   int xs;
-    xs = (a - (5 / (4)));
-	int a,b,c;
-	double d = 0.0d;
-    char a = 'a', b = 'b', c;
-
+    
+    int x, y, z;
+    char x, y, z;
+    double x, y, z;
+    String x, y, z;
+    
+    int x = 10, y = 5, z = 3;
+    char c = 'a';
 
 }
 

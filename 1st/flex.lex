@@ -77,8 +77,8 @@ PRIVATE "private"
 [A-Z][A-Za-z0-9_]* {printf("\nCLASS NAME\n"); return CLASS_NAME;}
 
 
-[+|-]?[0-9]+ {return INT_VALUE;}
-[+|-]?[0-9]+[.][0-9]+[d] {return DOUBLE_VALUE;}
+[0-9]+ {return INT_VALUE;}
+[0-9]+[.][0-9]+[d] {return DOUBLE_VALUE;}
 ['](([ -~]?)|([\\][nts]?))['] {return CHAR_VALUE;}
 ["][ -~]*["] {return STRING_VALUE;}
 {TRUE}|{FALSE} {return BOOLEAN_VALUE;}

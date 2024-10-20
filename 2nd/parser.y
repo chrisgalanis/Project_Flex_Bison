@@ -24,7 +24,6 @@ void yyerror(const char *s);
 %token BRACKET_RIGHT
 %token EQUAL_SIGN
 %token SEMICOLON
-%token SINGLE_MARK
 %token COLON
 %token COMMA
 %token DOT  
@@ -48,7 +47,7 @@ void yyerror(const char *s);
 %token DO
 %token WHILE
 %token CONDITION_SYMBOL
-%token BOOL_SYMBOL
+%token BOOL_OP
 %token INCREAMENT_DECREAMENT
 %token LOOP_STEP
 
@@ -140,10 +139,11 @@ string_init:  VAR_NAME EQUAL_SIGN STRING_VALUE
 
 
 variable_assignment:  VAR_NAME EQUAL_SIGN expression;
-expression: expression PLUS term |expression MINUS term |  BRACKET_LEFT expression  BRACKET_RIGHT | term  ;
-term:  term MULTIPLY id | term DIVIDE id | BRACKET_LEFT term BRACKET_RIGHT | BRACKET_LEFT expression BRACKET_RIGHT | id  ;
-id: variable_value  | VAR_NAME |  BRACKET_LEFT id  BRACKET_RIGHT | BRACKET_LEFT expression BRACKET_RIGHT;
 
+expression: expression PLUS term |expression MINUS term  | term  ;
+term:  term MULTIPLY par | term DIVIDE par | par ;
+par : BRACKET_LEFT expression BRACKET_RIGHT | id;
+id: variable_value  | VAR_NAME | BRACKET_LEFT id BRACKET_RIGHT;
 
 visibility: PUBLIC | PRIVATE  | %empty ;
 variable_value:  INT_VALUE | CHAR_VALUE | DOUBLE_VALUE | BOOLEAN_VALUE | STRING_VALUE ;
@@ -183,7 +183,7 @@ for_variable: %empty | variable_type VAR_NAME EQUAL_SIGN variable_value  ;
 
 for_comparison: %empty | VAR_NAME CONDITION_SYMBOL comparison_value for_bool_operator;
 comparison_value: INT_VALUE | DOUBLE_VALUE | CHAR_VALUE | BOOLEAN_VALUE | VAR_NAME ;
-for_bool_operator:  %empty | BOOL_SYMBOL for_comparison;
+for_bool_operator:  %empty | BOOL_OP for_comparison;
 
 for_step : %empty | VAR_NAME step ;
 step: INCREAMENT_DECREAMENT | LOOP_STEP step_value;
@@ -193,7 +193,7 @@ step_value: INT_VALUE | DOUBLE_VALUE ;
 // DO While Loop 
 do_while: DO CURLY_BRACKET_LEFT inside_brackets CURLY_BRACKET_RIGHT  WHILE BRACKET_LEFT do_condition BRACKET_RIGHT SEMICOLON {printf("\n Do While is identified\n");};
 do_condition: operand CONDITION_SYMBOL operand do_bool_operator| BOOLEAN_VALUE | VAR_NAME;
-do_bool_operator: %empty | BOOL_SYMBOL do_condition;
+do_bool_operator: %empty | BOOL_OP do_condition;
 operand: VAR_NAME | INT_VALUE | DOUBLE_VALUE | CHAR_VALUE | BOOLEAN_VALUE ;
 // End While Loopo
 
@@ -216,7 +216,7 @@ if: IF BRACKET_LEFT if_condition BRACKET_RIGHT CURLY_BRACKET_LEFT inside_bracket
 else_if: %empty | ELSE IF BRACKET_LEFT if_condition BRACKET_RIGHT CURLY_BRACKET_LEFT  inside_brackets CURLY_BRACKET_RIGHT else_if {printf("else if \n");} | else {printf("\n If is identified\n");};
 else: ELSE CURLY_BRACKET_LEFT  inside_brackets CURLY_BRACKET_RIGHT {printf("\n Else is identified\n");};     
 if_condition: operand  CONDITION_SYMBOL operand if_bool_operator| BOOLEAN_VALUE | VAR_NAME {printf("\n If Condition is identified\n");};
-if_bool_operator: %empty | BOOL_SYMBOL if_condition;
+if_bool_operator: %empty | BOOL_OP if_condition;
 
             
 %%

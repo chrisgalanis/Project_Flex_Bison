@@ -1,9 +1,8 @@
 /* A Bison parser, made by GNU Bison 3.8.2.  */
 
-/* Bison interface for Yacc-like parsers in C
+/* Skeleton interface for Bison GLR parsers in C
 
-   Copyright (C) 1984, 1989-1990, 2000-2015, 2018-2021 Free Software Foundation,
-   Inc.
+   Copyright (C) 2002-2015, 2018-2021 Free Software Foundation, Inc.
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -30,10 +29,6 @@
 
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
-
-/* DO NOT RELY ON FEATURES THAT ARE NOT DOCUMENTED in the manual,
-   especially those whose name start with YY_ or yy_.  They are
-   private implementation details that can be changed or removed.  */
 
 #ifndef YY_YY_PARSER_TAB_H_INCLUDED
 # define YY_YY_PARSER_TAB_H_INCLUDED
@@ -64,35 +59,42 @@ extern int yydebug;
     COLON = 265,                   /* COLON  */
     COMMA = 266,                   /* COMMA  */
     DOT = 267,                     /* DOT  */
-    PUBLIC = 268,                  /* PUBLIC  */
-    PRIVATE = 269,                 /* PRIVATE  */
-    CLASS = 270,                   /* CLASS  */
-    CLASS_NAME = 271,              /* CLASS_NAME  */
-    NEW = 272,                     /* NEW  */
-    FOR = 273,                     /* FOR  */
-    DO = 274,                      /* DO  */
-    WHILE = 275,                   /* WHILE  */
-    CONDITION_SYMBOL = 276,        /* CONDITION_SYMBOL  */
-    BOOL_SYMBOL = 277,             /* BOOL_SYMBOL  */
-    INCREAMENT_DECREAMENT = 278,   /* INCREAMENT_DECREAMENT  */
-    LOOP_STEP = 279,               /* LOOP_STEP  */
-    SWITCH = 280,                  /* SWITCH  */
-    CASE = 281,                    /* CASE  */
-    DEFAULT = 282,                 /* DEFAULT  */
-    BREAK = 283,                   /* BREAK  */
-    RETURN = 284,                  /* RETURN  */
-    VAR_NAME = 285,                /* VAR_NAME  */
-    VOID = 286,                    /* VOID  */
-    INT = 287,                     /* INT  */
-    CHAR = 288,                    /* CHAR  */
-    DOUBLE = 289,                  /* DOUBLE  */
-    BOOLEAN = 290,                 /* BOOLEAN  */
-    STRING = 291,                  /* STRING  */
-    INT_VALUE = 292,               /* INT_VALUE  */
-    CHAR_VALUE = 293,              /* CHAR_VALUE  */
-    DOUBLE_VALUE = 294,            /* DOUBLE_VALUE  */
-    BOOLEAN_VALUE = 295,           /* BOOLEAN_VALUE  */
-    STRING_VALUE = 296             /* STRING_VALUE  */
+    PLUS = 268,                    /* PLUS  */
+    MINUS = 269,                   /* MINUS  */
+    MULTIPLY = 270,                /* MULTIPLY  */
+    DIVIDE = 271,                  /* DIVIDE  */
+    UMINUS = 272,                  /* UMINUS  */
+    PUBLIC = 273,                  /* PUBLIC  */
+    PRIVATE = 274,                 /* PRIVATE  */
+    CLASS = 275,                   /* CLASS  */
+    CLASS_NAME = 276,              /* CLASS_NAME  */
+    NEW = 277,                     /* NEW  */
+    IF = 278,                      /* IF  */
+    ELSE = 279,                    /* ELSE  */
+    FOR = 280,                     /* FOR  */
+    DO = 281,                      /* DO  */
+    WHILE = 282,                   /* WHILE  */
+    CONDITION_SYMBOL = 283,        /* CONDITION_SYMBOL  */
+    BOOL_SYMBOL = 284,             /* BOOL_SYMBOL  */
+    INCREAMENT_DECREAMENT = 285,   /* INCREAMENT_DECREAMENT  */
+    LOOP_STEP = 286,               /* LOOP_STEP  */
+    SWITCH = 287,                  /* SWITCH  */
+    CASE = 288,                    /* CASE  */
+    DEFAULT = 289,                 /* DEFAULT  */
+    BREAK = 290,                   /* BREAK  */
+    RETURN = 291,                  /* RETURN  */
+    IDENT = 292,                   /* IDENT  */
+    VOID = 293,                    /* VOID  */
+    INT = 294,                     /* INT  */
+    CHAR = 295,                    /* CHAR  */
+    DOUBLE = 296,                  /* DOUBLE  */
+    BOOLEAN = 297,                 /* BOOLEAN  */
+    STRING = 298,                  /* STRING  */
+    INT_VALUE = 299,               /* INT_VALUE  */
+    CHAR_VALUE = 300,              /* CHAR_VALUE  */
+    DOUBLE_VALUE = 301,            /* DOUBLE_VALUE  */
+    BOOLEAN_VALUE = 302,           /* BOOLEAN_VALUE  */
+    STRING_VALUE = 303             /* STRING_VALUE  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -101,15 +103,15 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 94 "parser.y"
+#line 221 "parser.y"
 
     int ival;
-    char cval;
+    char* cval;
     double dval;
     char *sval;
 
 
-#line 113 "parser.tab.h"
+#line 115 "parser.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -120,8 +122,6 @@ typedef union YYSTYPE YYSTYPE;
 
 extern YYSTYPE yylval;
 
-
 int yyparse (void);
-
 
 #endif /* !YY_YY_PARSER_TAB_H_INCLUDED  */

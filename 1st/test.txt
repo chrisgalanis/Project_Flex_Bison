@@ -1,22 +1,39 @@
-public class  Ab 
+public class A_f 
 {
-    // ERROR //
-    x = (5 *  3) - 4 ;
-    x = (5 + 4) / 4 ;
-    x =  5 + (4 * 4);
-    x = 5 + (2 - 4) ;
-    x = 5 * (2 + 4) ;
-    x = 6 * ( 2 / 4) ;
+    int x;
+    int y;
 
-    
+    y = - 4;
+    x = 1 + 2 * (3/ 4); 
+    x = 2*3 + (4 + 2);
+    x = 2*(3+4);
+    //y = 0;
+    //c = '\n';
+/*
+    public int func_1 () {
 
-    a = "Hello123$" ;
-    b = "This is a valid str1ng";
-    c = "this is valid; \ f \ p 'anus' too";
-    
-    
+        if (x != 0)
+        {
+            for (int i = 0; i < 10; i++)
+            {
+                out.print("i: \n", i);
+                y = y + 1;
+            }
+        }
 
- 
+
+        func_1();
+        return 3;
+    }
+ */   
+}
+
+public class Bf2
+{
+    public class C 
+    {
+
+    }
 }
 
 

@@ -1,15 +1,29 @@
+public class ^Ab{ // CLASS_NAME is not a correct identifier name
 
 
-public class A
-{
-   int x ;
-   double m=4.0d;
-   char c,k;
-
-   k = - 'a';
-   k = + 'b';
-   c= 'a' + 'b';
-   
 }
 
+public class Ab{
+   public int x = ;
+   x = 'c';  //Cannot put char value in int variable
+   double y //no SEMICOLONCOLON
+   
 
+   do { 
+   }while( y > 0 ) 
+
+}
+
+public class C{
+
+   private int x; 
+   public double x; // public variable already initialised
+
+
+   int 7gg = 5, s = 5, h = 8; // 7gg is not a valid identifier, s and h should be initialised
+   double Jeronimo = 7.0 ;// there is no d in the end for DVALUE
+
+   if(s < 9){ h = h + h;} // no error
+ 
+
+}

@@ -34,7 +34,7 @@ PRIVATE "private"
 ")" {printf("\n ) \n");return BRACKET_RIGHT;}
 "=" {return EQUAL_SIGN;}
 ";" {printf("\n ; \n");return SEMICOLON;}
-"'" {return SINGLE_MARK;}
+
 ":" {return COLON;}
 "," {return COMMA;}
 "." {return DOT;}
@@ -43,6 +43,7 @@ PRIVATE "private"
 "-" {return MINUS;}
 "*" {return MULTIPLY;}
 "/" {return DIVIDE;}
+
 
 
 {FOR} {printf("\n FOR \n"); return FOR;}
@@ -55,11 +56,11 @@ PRIVATE "private"
 {CASE}    {return CASE; }
 {DEFAULT} {return DEFAULT;}
 
-{BREAK}  {return BREAK;}
-{RETURN} {return RETURN;}
+{BREAK}  {printf("\n BREAK \n"); return BREAK;}
+{RETURN} {printf("\n RETURN \n"); return RETURN;}
 
 "=="|"!="|">="|"<="|">"|"<" { return CONDITION_SYMBOL; }
-"&&"|"||" {return BOOL_SYMBOL;}
+"&&"|"||" {return BOOL_OP;}
 "++"|"--" {return INCREAMENT_DECREAMENT;}
 "+="|"-="|"*="|"/=" {return LOOP_STEP;}
 

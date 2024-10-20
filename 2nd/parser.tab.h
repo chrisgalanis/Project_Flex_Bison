@@ -60,45 +60,44 @@ extern int yydebug;
     BRACKET_RIGHT = 261,           /* BRACKET_RIGHT  */
     EQUAL_SIGN = 262,              /* EQUAL_SIGN  */
     SEMICOLON = 263,               /* SEMICOLON  */
-    SINGLE_MARK = 264,             /* SINGLE_MARK  */
-    COLON = 265,                   /* COLON  */
-    COMMA = 266,                   /* COMMA  */
-    DOT = 267,                     /* DOT  */
-    PLUS = 268,                    /* PLUS  */
-    MINUS = 269,                   /* MINUS  */
-    MULTIPLY = 270,                /* MULTIPLY  */
-    DIVIDE = 271,                  /* DIVIDE  */
-    PUBLIC = 272,                  /* PUBLIC  */
-    PRIVATE = 273,                 /* PRIVATE  */
-    CLASS = 274,                   /* CLASS  */
-    CLASS_NAME = 275,              /* CLASS_NAME  */
-    NEW = 276,                     /* NEW  */
-    IF = 277,                      /* IF  */
-    ELSE = 278,                    /* ELSE  */
-    FOR = 279,                     /* FOR  */
-    DO = 280,                      /* DO  */
-    WHILE = 281,                   /* WHILE  */
-    CONDITION_SYMBOL = 282,        /* CONDITION_SYMBOL  */
-    BOOL_SYMBOL = 283,             /* BOOL_SYMBOL  */
-    INCREAMENT_DECREAMENT = 284,   /* INCREAMENT_DECREAMENT  */
-    LOOP_STEP = 285,               /* LOOP_STEP  */
-    SWITCH = 286,                  /* SWITCH  */
-    CASE = 287,                    /* CASE  */
-    DEFAULT = 288,                 /* DEFAULT  */
-    BREAK = 289,                   /* BREAK  */
-    RETURN = 290,                  /* RETURN  */
-    VAR_NAME = 291,                /* VAR_NAME  */
-    VOID = 292,                    /* VOID  */
-    INT = 293,                     /* INT  */
-    CHAR = 294,                    /* CHAR  */
-    DOUBLE = 295,                  /* DOUBLE  */
-    BOOLEAN = 296,                 /* BOOLEAN  */
-    STRING = 297,                  /* STRING  */
-    INT_VALUE = 298,               /* INT_VALUE  */
-    CHAR_VALUE = 299,              /* CHAR_VALUE  */
-    DOUBLE_VALUE = 300,            /* DOUBLE_VALUE  */
-    BOOLEAN_VALUE = 301,           /* BOOLEAN_VALUE  */
-    STRING_VALUE = 302             /* STRING_VALUE  */
+    COLON = 264,                   /* COLON  */
+    COMMA = 265,                   /* COMMA  */
+    DOT = 266,                     /* DOT  */
+    PLUS = 267,                    /* PLUS  */
+    MINUS = 268,                   /* MINUS  */
+    MULTIPLY = 269,                /* MULTIPLY  */
+    DIVIDE = 270,                  /* DIVIDE  */
+    PUBLIC = 271,                  /* PUBLIC  */
+    PRIVATE = 272,                 /* PRIVATE  */
+    CLASS = 273,                   /* CLASS  */
+    CLASS_NAME = 274,              /* CLASS_NAME  */
+    NEW = 275,                     /* NEW  */
+    IF = 276,                      /* IF  */
+    ELSE = 277,                    /* ELSE  */
+    FOR = 278,                     /* FOR  */
+    DO = 279,                      /* DO  */
+    WHILE = 280,                   /* WHILE  */
+    CONDITION_SYMBOL = 281,        /* CONDITION_SYMBOL  */
+    BOOL_OP = 282,                 /* BOOL_OP  */
+    INCREAMENT_DECREAMENT = 283,   /* INCREAMENT_DECREAMENT  */
+    LOOP_STEP = 284,               /* LOOP_STEP  */
+    SWITCH = 285,                  /* SWITCH  */
+    CASE = 286,                    /* CASE  */
+    DEFAULT = 287,                 /* DEFAULT  */
+    BREAK = 288,                   /* BREAK  */
+    RETURN = 289,                  /* RETURN  */
+    IDENT = 290,                   /* IDENT  */
+    VOID = 291,                    /* VOID  */
+    INT = 292,                     /* INT  */
+    CHAR = 293,                    /* CHAR  */
+    DOUBLE = 294,                  /* DOUBLE  */
+    BOOLEAN = 295,                 /* BOOLEAN  */
+    STRING = 296,                  /* STRING  */
+    INT_VALUE = 297,               /* INT_VALUE  */
+    CHAR_VALUE = 298,              /* CHAR_VALUE  */
+    DOUBLE_VALUE = 299,            /* DOUBLE_VALUE  */
+    BOOLEAN_VALUE = 300,           /* BOOLEAN_VALUE  */
+    STRING_VALUE = 301             /* STRING_VALUE  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -115,7 +114,7 @@ union YYSTYPE
     char *sval;
 
 
-#line 119 "parser.tab.h"
+#line 118 "parser.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

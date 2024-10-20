@@ -169,7 +169,7 @@
         return -1;
     }
 
-    int  find_variable_type(char *name)
+   /* int  find_variable_type(char *name)
     {
         for(int i = 0; i < top_var; i++)
         {
@@ -179,7 +179,7 @@
             }
         }
         return -1;
-    }
+    }*/
 
     void variable_initialization(int visibility , char *type, char *name)
     {
@@ -233,7 +233,6 @@
 %token BRACKET_RIGHT
 %token EQUAL_SIGN
 %token SEMICOLON
-%token SINGLE_MARK
 %token COLON
 %token COMMA
 %token DOT  
@@ -307,7 +306,7 @@
 %token <sval> BOOLEAN_VALUE
 %token <sval> STRING_VALUE
 
-%glr-parser // For handling the problem of LR(1) grammar
+ // For handling the problem of LR(1) grammar
 
 %start program
 

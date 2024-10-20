@@ -105,15 +105,18 @@ variable_type: INT
               |STRING ;
 
 // Variable Initilization
-variable_assignment:  VAR_NAME EQUAL_SIGN expression;
+variable_assignment:  VAR_NAME EQUAL_SIGN  expression ;
+
 
 expression: expression PLUS term |expression MINUS term  | term  ;
 term:  term MULTIPLY par | term DIVIDE par | par ;
 par : BRACKET_LEFT expression BRACKET_RIGHT | id;
-id: variable_value  | VAR_NAME | BRACKET_LEFT id BRACKET_RIGHT;
+id: variable_value  | VAR_NAME |  BRACKET_LEFT id BRACKET_RIGHT ;
 
-
-variable_value:  INT_VALUE | CHAR_VALUE | DOUBLE_VALUE | BOOLEAN_VALUE | STRING_VALUE  ; 
+variable_value: numeric_value | string_value;
+numeric_value: sign INT_VALUE | sign DOUBLE_VALUE;
+sign: PLUS | MINUS | %empty ;
+string_value:  CHAR_VALUE | BOOLEAN_VALUE | STRING_VALUE  ; 
 
 
 // Functions
